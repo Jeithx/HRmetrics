@@ -8,6 +8,7 @@ import { useRoutineStore } from '../store/useRoutineStore';
 import { useWaterStore } from '../store/useWaterStore';
 import { useExerciseStore } from '../store/useExerciseStore';
 import { Colors } from '../constants/theme';
+import Toast from '../components/Toast';
 
 export default function RootLayout() {
   const loadRoutines = useRoutineStore((s) => s.loadRoutines);
@@ -50,7 +51,9 @@ export default function RootLayout() {
         <Stack.Screen name="bodyweight/index" />
         <Stack.Screen name="water/index" />
         <Stack.Screen name="exercises/index" />
+        <Stack.Screen name="settings/backup" />
       </Stack>
+      <Toast />
     </GestureHandlerRootView>
   );
 }

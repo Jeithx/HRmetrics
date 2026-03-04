@@ -245,6 +245,12 @@ export default function SettingsScreen() {
       <SectionHeader title="DATA" />
       <View style={styles.card}>
         <DataRow
+          label="Backup & Restore"
+          icon="🔒"
+          onPress={() => router.push('/settings/backup')}
+        />
+        <View style={styles.divider} />
+        <DataRow
           label={exporting ? 'Exporting…' : 'Export Workouts (CSV)'}
           icon="📊"
           onPress={() => exportCSV('workouts')}

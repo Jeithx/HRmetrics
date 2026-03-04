@@ -15,7 +15,10 @@
       "Bash(npx expo install expo-blur expo-sharing react-native-draggable-flatlist --legacy-peer-deps)",
       "Bash(npx expo install expo-blur expo-sharing react-native-draggable-flatlist -- --legacy-peer-deps)",
       "Bash(npx expo install expo-file-system react-native-gesture-handler -- --legacy-peer-deps)",
-      "Bash(ls *.md)"
+      "Bash(ls *.md)",
+      "Bash(npx expo install expo-document-picker --legacy-peer-deps)",
+      "Bash(npx expo install expo-document-picker -- --legacy-peer-deps)",
+      "Bash(npm install expo-document-picker --legacy-peer-deps)"
     ]
   }
 }
