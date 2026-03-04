@@ -35,6 +35,7 @@
       "expo-sqlite",
       "expo-sharing"
     ],
+    "newArchEnabled": true,
     "extra": {
       "router": {},
       "eas": {

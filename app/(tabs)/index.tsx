@@ -15,12 +15,16 @@ import Svg, { Polyline } from 'react-native-svg';
 import { useWorkoutStore } from '../../store/useWorkoutStore';
 import { useRoutineStore } from '../../store/useRoutineStore';
 import { useBodyWeightStore } from '../../store/useBodyWeightStore';
+import { useWaterStore } from '../../store/useWaterStore';
 import { getRecentWorkouts } from '../../db/workoutQueries';
 import { getWeekStats } from '../../db/historyQueries';
 import { getSetting } from '../../db/settingsQueries';
 import { kgToDisplay, formatVolume, WeightUnit } from '../../utils/weightUtils';
+import { formatWater } from '../../utils/waterUtils';
 import { BodyWeightEntry, Workout, RoutineDayWithExercises } from '../../types';
 import { BorderRadius, Colors, Spacing, Typography } from '../../constants/theme';
+
+const WATER_COLOR = '#4FC3F7';
 
 const PHASE_COLOR: Record<string, string> = {
   cut: Colors.error,
@@ -238,6 +242,7 @@ export default function HomeScreen() {
     loadStats: loadBwStats,
     loadPhaseInfo,
   } = useBodyWeightStore();
+  const { todayTotal: waterTotal, dailyGoalMl, waterUnit, loadToday: loadWaterToday, loadSettings: loadWaterSettings, logWater } = useWaterStore();
   const [lastWorkout, setLastWorkout] = useState<Workout | null>(null);
   const [unit, setUnit] = useState<WeightUnit>('kg');
   const [weekStats, setWeekStats] = useState<{ count: number; volume: number }>({ count: 0, volume: 0 });
@@ -251,7 +256,9 @@ export default function HomeScreen() {
     loadBwEntries();
     loadBwStats();
     loadPhaseInfo();
-  }, [loadBwEntries, loadBwStats, loadPhaseInfo]);
+    loadWaterSettings();
+    loadWaterToday();
+  }, [loadBwEntries, loadBwStats, loadPhaseInfo, loadWaterSettings, loadWaterToday]);
 
   useFocusEffect(
     useCallback(() => {
@@ -353,6 +360,42 @@ export default function HomeScreen() {
         <View style={styles.bwFooter}>
           <Text style={styles.bwLogLink}>+ Log Weight</Text>
           <Ionicons name="chevron-forward" size={14} color={Colors.textTertiary} />
+        </View>
+      </Pressable>
+
+      {/* Water Card */}
+      <Pressable
+        style={({ pressed }) => [styles.waterCard, pressed && styles.cardPressed]}
+        onPress={() => router.push('/water')}
+      >
+        <View style={styles.waterHeader}>
+          <Ionicons name="water" size={16} color={WATER_COLOR} />
+          <Text style={styles.waterTitle}>Water</Text>
+          <Text style={styles.waterGoal}>{formatWater(waterTotal, waterUnit)} / {formatWater(dailyGoalMl, waterUnit)}</Text>
+        </View>
+        <View style={styles.waterBar}>
+          <View
+            style={[
+              styles.waterBarFill,
+              { width: `${Math.min(100, dailyGoalMl > 0 ? (waterTotal / dailyGoalMl) * 100 : 0)}%` },
+            ]}
+          />
+        </View>
+        <View style={styles.waterQuickRow}>
+          {[250, 500].map((ml) => (
+            <Pressable
+              key={ml}
+              style={({ pressed }) => [styles.waterQuickBtn, pressed && { opacity: 0.7 }]}
+              onPress={(e) => {
+                e.stopPropagation();
+                try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+                logWater(ml);
+                loadWaterToday();
+              }}
+            >
+              <Text style={styles.waterQuickBtnText}>+{ml}ml</Text>
+            </Pressable>
+          ))}
         </View>
       </Pressable>
 
@@ -613,6 +656,58 @@ const styles = StyleSheet.create({
   bwLogLink: {
     flex: 1,
     color: Colors.primary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  waterCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  waterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  waterTitle: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+  },
+  waterGoal: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+  },
+  waterBar: {
+    height: 6,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+  },
+  waterBarFill: {
+    height: 6,
+    backgroundColor: WATER_COLOR,
+    borderRadius: BorderRadius.full,
+  },
+  waterQuickRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  waterQuickBtn: {
+    backgroundColor: `${WATER_COLOR}20`,
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderWidth: 1,
+    borderColor: `${WATER_COLOR}40`,
+  },
+  waterQuickBtnText: {
+    color: WATER_COLOR,
     fontSize: Typography.size.sm,
     fontWeight: Typography.weight.semibold,
   },

@@ -1,11 +1,16 @@
-import { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import Reanimated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SkeletonCard } from '../../components/SkeletonLoader';
+import { useWaterStore } from '../../store/useWaterStore';
+import { getWaterEntriesByDate, getWaterRange } from '../../db/waterQueries';
+import { formatWater } from '../../utils/waterUtils';
+import { WaterEntry } from '../../types';
 import {
   Alert,
   Animated,
   Dimensions,
   FlatList,
+  Modal,
   PanResponder,
   Pressable,
   ScrollView,
@@ -13,7 +18,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import Svg, { Circle, G, Line as SvgLine, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, G, Line as SvgLine, Path, Rect, Text as SvgText } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useHistoryStore } from '../../store/useHistoryStore';
@@ -118,7 +123,7 @@ function SwipeableWorkoutCard({ workout, unit, onPress, onDelete }: SwipeableWor
           <Text style={styles.deleteActionText}>Delete</Text>
         </Pressable>
       </View>
-      <Animated.View style={{ transform: [{ translateX }] }} {...pan.panHandlers}>
+      <Animated.View style={{ transform: [{ translateX }], backgroundColor: Colors.background }} {...pan.panHandlers}>
         <Pressable
           style={({ pressed }) => [styles.workoutCard, pressed && styles.workoutCardPressed]}
           onPress={() => {
@@ -432,13 +437,187 @@ function RecordsTab({ unit }: { unit: WeightUnit }) {
   );
 }
 
+// ─── Water Tab ─────────────────────────────────────────────────────────────
+
+const WATER_COLOR = '#4FC3F7';
+const WATER_SCREEN_W = Dimensions.get('window').width;
+
+function getLocalDateStr(daysAgo = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function WaterDayModal({
+  date,
+  onClose,
+}: {
+  date: string;
+  onClose: () => void;
+}) {
+  const [entries, setEntries] = useState<WaterEntry[]>([]);
+  const { waterUnit } = useWaterStore();
+
+  useCallback(() => {
+    try {
+      setEntries(getWaterEntriesByDate(date));
+    } catch {}
+  }, [date])();
+
+  function fmtTime(iso: string) {
+    const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'));
+    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  }
+
+  return (
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={styles.modalBackdrop} onPress={onClose} />
+      <View style={styles.modalSheet}>
+        <Text style={styles.modalTitle}>{date}</Text>
+        {entries.length === 0 ? (
+          <Text style={styles.emptyListHint}>No entries for this day</Text>
+        ) : (
+          entries.map((e) => (
+            <View key={e.id} style={styles.waterModalRow}>
+              <Text style={styles.waterModalTime}>{fmtTime(e.recordedAt)}</Text>
+              <Text style={styles.waterModalAmt}>{formatWater(e.amountMl, waterUnit)}</Text>
+              {e.notes ? <Text style={styles.waterModalNotes}>{e.notes}</Text> : null}
+            </View>
+          ))
+        )}
+        <Pressable style={styles.modalClose} onPress={onClose}>
+          <Text style={styles.modalCloseText}>Close</Text>
+        </Pressable>
+      </View>
+    </Modal>
+  );
+}
+
+function WaterHistoryChart({ goalMl }: { goalMl: number }) {
+  const { history, waterUnit } = useWaterStore();
+  const CHART_W = WATER_SCREEN_W - Spacing.lg * 4;
+  const CHART_H = 160;
+  const LABEL_H = 24;
+  const BAR_COUNT = Math.min(30, history.length || 1);
+  const BAR_GAP = 2;
+  const BAR_W = (CHART_W - BAR_GAP * (BAR_COUNT - 1)) / BAR_COUNT;
+
+  const end = getLocalDateStr(0);
+  const start = getLocalDateStr(29);
+  const [rangeData, setRangeData] = useState<{ date: string; totalMl: number }[]>([]);
+
+  useCallback(() => {
+    try { setRangeData(getWaterRange(start, end)); } catch {}
+  }, [start, end])();
+
+  const dates = Array.from({ length: 30 }, (_, i) => getLocalDateStr(29 - i));
+  const dataMap = new Map(rangeData.map((d) => [d.date, d.totalMl]));
+  const bars = dates.map((date) => ({ date, totalMl: dataMap.get(date) ?? 0 })).slice(-BAR_COUNT);
+  const maxVal = Math.max(...bars.map((b) => b.totalMl), goalMl, 1);
+  const goalY = CHART_H - (goalMl / maxVal) * CHART_H;
+  const today = getLocalDateStr(0);
+
+  return (
+    <View style={styles.chartCard}>
+      <Text style={styles.chartTitle}>LAST 30 DAYS</Text>
+      <Svg width={CHART_W} height={CHART_H + LABEL_H}>
+        {goalMl > 0 && (
+          <SvgLine x1={0} y1={goalY} x2={CHART_W} y2={goalY} stroke={WATER_COLOR} strokeWidth={1} strokeDasharray="4 4" opacity={0.5} />
+        )}
+        {bars.map(({ date, totalMl }, i) => {
+          const barH = (totalMl / maxVal) * CHART_H;
+          const x = i * (BAR_W + BAR_GAP);
+          const isToday = date === today;
+          const hitsGoal = goalMl > 0 && totalMl >= goalMl;
+          const fill = totalMl === 0 ? Colors.surfaceElevated : hitsGoal ? WATER_COLOR : Colors.textTertiary;
+          const showLabel = i === 0 || i === 14 || i === bars.length - 1;
+          return (
+            <React.Fragment key={date}>
+              <Rect x={x} y={CHART_H - barH} width={BAR_W} height={Math.max(barH, 2)} rx={1} fill={fill} opacity={isToday ? 1 : 0.75} />
+              {showLabel && (
+                <SvgText x={x + BAR_W / 2} y={CHART_H + LABEL_H - 4} fill={Colors.textTertiary} fontSize={8} textAnchor="middle">
+                  {date.slice(5)}
+                </SvgText>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </Svg>
+    </View>
+  );
+}
+
+function WaterTab() {
+  const { stats, history, waterUnit, dailyGoalMl, loadHistory, loadStats, loadSettings } = useWaterStore();
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  useCallback(() => {
+    loadSettings();
+    loadHistory();
+    loadStats();
+  }, [loadSettings, loadHistory, loadStats])();
+
+  const statCards = [
+    { label: '7-DAY AVG', value: stats ? formatWater(stats.sevenDayAvg, waterUnit) : '—' },
+    { label: '30-DAY AVG', value: stats ? formatWater(stats.thirtyDayAvg, waterUnit) : '—' },
+    { label: 'BEST DAY', value: stats?.bestDay ? formatWater(stats.bestDay.amount, waterUnit) : '—' },
+    { label: 'STREAK', value: stats ? `${stats.currentStreak}d` : '—' },
+  ];
+
+  return (
+    <ScrollView contentContainerStyle={styles.waterTabContent}>
+      {/* Stats */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {statCards.map((c) => (
+          <View key={c.label} style={styles.waterStatCard}>
+            <Text style={styles.waterStatLabel}>{c.label}</Text>
+            <Text style={styles.waterStatValue}>{c.value}</Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      {/* Chart */}
+      <WaterHistoryChart goalMl={dailyGoalMl} />
+
+      {/* Daily summaries */}
+      <Text style={styles.logHeaderText}>DAILY LOG</Text>
+      {history.length === 0 ? (
+        <View style={styles.emptyList}>
+          <Text style={styles.emptyListText}>No water logged yet</Text>
+        </View>
+      ) : (
+        history.map((day) => {
+          const hitsGoal = dailyGoalMl > 0 && day.totalMl >= dailyGoalMl;
+          return (
+            <Pressable
+              key={day.date}
+              style={({ pressed }) => [styles.waterDayRow, pressed && { opacity: 0.8 }]}
+              onPress={() => setSelectedDate(day.date)}
+            >
+              <View style={[styles.waterDayDot, { backgroundColor: hitsGoal ? Colors.success : Colors.error }]} />
+              <Text style={styles.waterDayDate}>{day.date}</Text>
+              <Text style={styles.waterDayTotal}>{formatWater(day.totalMl, waterUnit)}</Text>
+              <Ionicons name="chevron-forward" size={14} color={Colors.textTertiary} />
+            </Pressable>
+          );
+        })
+      )}
+
+      {selectedDate && (
+        <WaterDayModal date={selectedDate} onClose={() => setSelectedDate(null)} />
+      )}
+    </ScrollView>
+  );
+}
+
 // ─── History Screen ────────────────────────────────────────────────────────
 
-type TabKey = 'workouts' | 'progress' | 'records';
+type TabKey = 'workouts' | 'progress' | 'records' | 'water';
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'workouts', label: 'Workouts' },
   { key: 'progress', label: 'Progress' },
   { key: 'records', label: 'Records' },
+  { key: 'water', label: 'Water' },
 ];
 
 export default function HistoryScreen() {
@@ -464,7 +643,7 @@ export default function HistoryScreen() {
         <Text style={styles.headerTitle}>History</Text>
       </View>
 
-      <View style={styles.tabRow}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScrollRow} contentContainerStyle={styles.tabRow}>
         {TABS.map((tab) => (
           <Pressable
             key={tab.key}
@@ -476,12 +655,13 @@ export default function HistoryScreen() {
             </Text>
           </Pressable>
         ))}
-      </View>
+      </ScrollView>
 
       <View style={styles.content}>
         {activeTab === 'workouts' && <WorkoutsTab unit={unit} />}
         {activeTab === 'progress' && <ProgressTab unit={unit} />}
         {activeTab === 'records' && <RecordsTab unit={unit} />}
+        {activeTab === 'water' && <WaterTab />}
       </View>
     </View>
   );
@@ -502,14 +682,17 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.xl,
     fontWeight: Typography.weight.bold,
   },
+  tabScrollRow: {
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    flexGrow: 0,
+  },
   tabRow: {
     flexDirection: 'row',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     gap: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   tabPill: {
     paddingHorizontal: Spacing.md,
@@ -719,4 +902,108 @@ const styles = StyleSheet.create({
   },
   prRowWeightRecent: { color: Colors.text },
   prRowEst: { color: Colors.textTertiary, fontSize: Typography.size.xs },
+
+  // Water tab
+  waterTabContent: { padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxxl },
+  waterStatCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    marginRight: Spacing.sm,
+    alignItems: 'center',
+    gap: 4,
+    minWidth: 90,
+  },
+  waterStatLabel: {
+    color: Colors.textTertiary,
+    fontSize: Typography.size.xs,
+    fontWeight: Typography.weight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  waterStatValue: {
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.bold,
+  },
+  waterDayRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  waterDayDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  waterDayDate: {
+    flex: 1,
+    color: Colors.text,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.medium,
+  },
+  waterDayTotal: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+  },
+  waterModalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    gap: Spacing.sm,
+  },
+  waterModalTime: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
+    width: 60,
+  },
+  waterModalAmt: {
+    color: Colors.text,
+    fontSize: Typography.size.sm,
+    fontWeight: Typography.weight.semibold,
+    flex: 1,
+  },
+  waterModalNotes: {
+    color: Colors.textTertiary,
+    fontSize: Typography.size.xs,
+  },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  modalSheet: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: BorderRadius.xl,
+    borderTopRightRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxxl,
+    maxHeight: '60%',
+    borderTopWidth: 1,
+    borderColor: Colors.border,
+    gap: Spacing.xs,
+  },
+  modalTitle: {
+    color: Colors.text,
+    fontSize: Typography.size.lg,
+    fontWeight: Typography.weight.bold,
+    marginBottom: Spacing.sm,
+  },
+  modalClose: {
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
+  },
+  modalCloseText: {
+    color: Colors.primary,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+  },
 });

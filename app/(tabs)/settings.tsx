@@ -5,6 +5,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -17,10 +18,14 @@ import {
   clearAllUserData,
 } from '../../db/exportQueries';
 import { useRoutineStore } from '../../store/useRoutineStore';
+import { useWaterStore } from '../../store/useWaterStore';
 import { BorderRadius, Colors, Spacing, Typography } from '../../constants/theme';
+
+const WATER_COLOR = '#4FC3F7';
 
 type WeightUnit = 'kg' | 'lbs';
 type RestOption = '60' | '90' | '120' | '180';
+type WaterUnit = 'ml' | 'oz';
 
 const REST_OPTIONS: RestOption[] = ['60', '90', '120', '180'];
 const REST_LABELS: Record<RestOption, string> = { '60': '60s', '90': '90s', '120': '2m', '180': '3m' };
@@ -90,6 +95,8 @@ export default function SettingsScreen() {
   const [unit, setUnit] = useState<WeightUnit>('kg');
   const [restTimer, setRestTimer] = useState<RestOption>('90');
   const [exporting, setExporting] = useState(false);
+  const [waterGoalInput, setWaterGoalInput] = useState('');
+  const { dailyGoalMl, waterUnit, setDailyGoal, setWaterUnit, loadSettings: loadWaterSettings } = useWaterStore();
 
   useFocusEffect(
     useCallback(() => {
@@ -97,8 +104,19 @@ export default function SettingsScreen() {
       setUnit(u === 'lbs' ? 'lbs' : 'kg');
       const r = getSetting('rest_timer_seconds');
       setRestTimer(REST_OPTIONS.includes(r as RestOption) ? (r as RestOption) : '90');
-    }, [])
+      loadWaterSettings();
+      setWaterGoalInput(String(dailyGoalMl));
+    }, [loadWaterSettings, dailyGoalMl])
   );
+
+  const handleWaterGoalBlur = () => {
+    const parsed = parseInt(waterGoalInput, 10);
+    if (!isNaN(parsed) && parsed > 0) {
+      setDailyGoal(parsed);
+    } else {
+      setWaterGoalInput(String(dailyGoalMl));
+    }
+  };
 
   const handleUnitChange = (v: WeightUnit) => {
     setUnit(v);
@@ -240,6 +258,35 @@ export default function SettingsScreen() {
         />
       </View>
 
+      {/* ── Water ───────────────────────────────── */}
+      <SectionHeader title="WATER" />
+      <View style={styles.card}>
+        <View style={styles.settingsRow}>
+          <Text style={styles.rowLabel}>Daily Goal</Text>
+          <View style={styles.waterGoalRow}>
+            <TextInput
+              style={styles.waterGoalInput}
+              value={waterGoalInput}
+              onChangeText={setWaterGoalInput}
+              onBlur={handleWaterGoalBlur}
+              keyboardType="number-pad"
+              selectTextOnFocus
+            />
+            <Text style={styles.waterGoalUnit}>ml</Text>
+          </View>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.settingsRow}>
+          <Text style={styles.rowLabel}>Unit</Text>
+          <PillGroup<WaterUnit>
+            options={['ml', 'oz']}
+            value={waterUnit}
+            labels={{ ml: 'ML', oz: 'OZ' }}
+            onChange={(v) => setWaterUnit(v)}
+          />
+        </View>
+      </View>
+
       {/* ── About ───────────────────────────────── */}
       <SectionHeader title="ABOUT" />
       <View style={styles.card}>
@@ -360,5 +407,27 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.sm,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  waterGoalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  waterGoalInput: {
+    backgroundColor: Colors.surfaceElevated,
+    color: Colors.text,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minWidth: 64,
+    textAlign: 'center',
+  },
+  waterGoalUnit: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.sm,
   },
 });

@@ -5,15 +5,20 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { initializeDatabase } from '../db/database';
 import { getSetting } from '../db/settingsQueries';
 import { useRoutineStore } from '../store/useRoutineStore';
+import { useWaterStore } from '../store/useWaterStore';
 import { Colors } from '../constants/theme';
 
 export default function RootLayout() {
   const loadRoutines = useRoutineStore((s) => s.loadRoutines);
   const loadTodaysDay = useRoutineStore((s) => s.loadTodaysDay);
+  const loadWaterToday = useWaterStore((s) => s.loadToday);
+  const loadWaterSettings = useWaterStore((s) => s.loadSettings);
 
   useEffect(() => {
     initializeDatabase()
       .then(() => {
+        loadWaterSettings();
+        loadWaterToday();
         const done = getSetting('onboarding_complete');
         if (done !== '1') {
           router.replace('/onboarding');
@@ -40,6 +45,7 @@ export default function RootLayout() {
         <Stack.Screen name="routines/[id]" />
         <Stack.Screen name="history/[id]" />
         <Stack.Screen name="bodyweight" />
+        <Stack.Screen name="water" />
       </Stack>
     </GestureHandlerRootView>
   );

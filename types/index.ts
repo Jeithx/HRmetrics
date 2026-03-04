@@ -234,3 +234,25 @@ export interface PhaseInfo {
   startDate: string;
   goalWeight: number | null;
 }
+
+// ─── Water types ────────────────────────────────────────────────────────────
+
+export interface WaterEntry {
+  id: number;
+  amountMl: number;
+  recordedAt: string;
+  notes: string | null;
+}
+
+export interface WaterDaySummary {
+  date: string;
+  totalMl: number;
+}
+
+export interface WaterStats {
+  todayTotal: number;
+  sevenDayAvg: number;
+  thirtyDayAvg: number;
+  bestDay: { amount: number; date: string } | null;
+  currentStreak: number;
+}

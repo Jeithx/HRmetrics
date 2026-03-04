@@ -130,13 +130,13 @@ const SetRow = memo(function SetRow({
         onPress={onToggle}
         hitSlop={8}
       >
-        <Animated.View style={checkStyle}>
-          <Ionicons
-            name={set.completed ? 'checkmark-circle' : 'checkmark-circle-outline'}
-            size={28}
-            color={set.completed ? Colors.primary : Colors.textTertiary}
-          />
-        </Animated.View>
+        <View style={[styles.checkRing, set.completed && styles.checkRingComplete]}>
+          <Animated.View style={checkStyle}>
+            {set.completed && (
+              <Ionicons name="checkmark" size={16} color={Colors.background} />
+            )}
+          </Animated.View>
+        </View>
       </Pressable>
 
       <Pressable onPress={onDelete} hitSlop={8} style={styles.deleteSetBtn}>
@@ -627,6 +627,20 @@ const styles = StyleSheet.create({
   checkButton: {
     width: 36,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkRing: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: Colors.textSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkRingComplete: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   deleteSetBtn: {
     width: 24,
