@@ -57,7 +57,7 @@ export default function RestTimer({ visible, durationSeconds = 90, onDismiss }: 
         setRemaining((prev) => {
           if (prev <= 1) {
             if (intervalRef.current) clearInterval(intervalRef.current);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { });
             return 0;
           }
           return prev - 1;
@@ -103,7 +103,7 @@ export default function RestTimer({ visible, durationSeconds = 90, onDismiss }: 
         <Pressable
           style={({ pressed }) => [styles.skipButton, pressed && styles.skipButtonPressed]}
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
             onDismiss();
           }}
         >

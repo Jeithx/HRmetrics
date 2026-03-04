@@ -23,10 +23,10 @@ const PHASES: {
   icon: string;
   description: string;
 }[] = [
-  { key: 'cut', label: 'CUT', icon: '↓', description: 'Losing weight, caloric deficit' },
-  { key: 'bulk', label: 'BULK', icon: '↑', description: 'Gaining muscle, caloric surplus' },
-  { key: 'maintain', label: 'MAINTAIN', icon: '→', description: 'Holding current weight' },
-];
+    { key: 'cut', label: 'CUT', icon: '↓', description: 'Losing weight, caloric deficit' },
+    { key: 'bulk', label: 'BULK', icon: '↑', description: 'Gaining muscle, caloric surplus' },
+    { key: 'maintain', label: 'MAINTAIN', icon: '→', description: 'Holding current weight' },
+  ];
 
 interface PhaseSelectorProps {
   visible: boolean;

@@ -461,7 +461,7 @@ function WaterDayModal({
   useEffect(() => {
     try {
       setEntries(getWaterEntriesByDate(date));
-    } catch {}
+    } catch { }
   }, [date]);
 
   function fmtTime(iso: string) {
@@ -507,7 +507,7 @@ function WaterHistoryChart({ goalMl }: { goalMl: number }) {
   const [rangeData, setRangeData] = useState<{ date: string; totalMl: number }[]>([]);
 
   useEffect(() => {
-    try { setRangeData(getWaterRange(start, end)); } catch {}
+    try { setRangeData(getWaterRange(start, end)); } catch { }
   }, [start, end]);
 
   const dates = Array.from({ length: 30 }, (_, i) => getLocalDateStr(29 - i));

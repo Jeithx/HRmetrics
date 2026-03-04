@@ -33,7 +33,15 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#C8FF00"
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "newArchEnabled": true,
     "extra": {

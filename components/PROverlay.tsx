@@ -50,9 +50,9 @@ export default function PROverlay({ prs, unit, visible, onDone }: PROverlayProps
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setTimeout(() => {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => { });
       }, 200);
-    } catch {}
+    } catch { }
 
     timerRef.current = setTimeout(() => {
       if (prs.length <= 1) {

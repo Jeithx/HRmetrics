@@ -71,12 +71,12 @@ function Sparkline({ entries, unit }: SparklineProps) {
   const points =
     width > 0 && display.length >= 2
       ? display
-          .map((w, i) => {
-            const x = PAD + (i / (display.length - 1)) * (width - PAD * 2);
-            const y = H - PAD - ((w - min) / range) * (H - PAD * 2);
-            return `${x.toFixed(1)},${y.toFixed(1)}`;
-          })
-          .join(' ')
+        .map((w, i) => {
+          const x = PAD + (i / (display.length - 1)) * (width - PAD * 2);
+          const y = H - PAD - ((w - min) / range) * (H - PAD * 2);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        })
+        .join(' ')
       : '';
 
   return (
@@ -120,7 +120,7 @@ function SwapDayModal({ visible, days, onSelect, onClose }: SwapDayModalProps) {
             <Pressable
               style={({ pressed }) => [styles.swapRow, pressed && styles.swapRowPressed]}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
                 onSelect(item);
                 onClose();
               }}
@@ -212,7 +212,7 @@ function TodaysCard({ onStartWithDay, onStartBlank }: TodaysCardProps) {
         <Pressable
           style={({ pressed }) => [styles.secondaryBtn, pressed && styles.secondaryBtnPressed]}
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
             skipDay();
           }}
         >
@@ -388,7 +388,7 @@ export default function HomeScreen() {
               style={({ pressed }) => [styles.waterQuickBtn, pressed && { opacity: 0.7 }]}
               onPress={(e) => {
                 e.stopPropagation();
-                try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch {}
+                try { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); } catch { }
                 logWater(ml);
                 loadWaterToday();
               }}

@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Notifications from 'expo-notifications';
 import { initializeDatabase } from '../db/database';
 import { getSetting } from '../db/settingsQueries';
 import { useRoutineStore } from '../store/useRoutineStore';
 import { useWaterStore } from '../store/useWaterStore';
 import { useExerciseStore } from '../store/useExerciseStore';
+import { requestPermissions } from '../utils/notificationService';
 import { Colors } from '../constants/theme';
 import Toast from '../components/Toast';
 
@@ -16,6 +18,7 @@ export default function RootLayout() {
   const loadWaterToday = useWaterStore((s) => s.loadToday);
   const loadWaterSettings = useWaterStore((s) => s.loadSettings);
   const loadExercises = useExerciseStore((s) => s.loadExercises);
+  const responseListener = useRef<Notifications.EventSubscription | null>(null);
 
   useEffect(() => {
     initializeDatabase()
@@ -30,10 +33,35 @@ export default function RootLayout() {
           loadRoutines();
           loadTodaysDay();
         }
+
+        // Request notification permissions once on first launch
+        const permAsked = getSetting('notifications_permission_asked');
+        if (permAsked !== '1') {
+          requestPermissions().catch(() => { });
+        }
       })
       .catch((error: unknown) => {
         console.error('Failed to initialize database:', error);
       });
+
+    // Handle notification tap — navigate to the relevant screen
+    responseListener.current =
+      Notifications.addNotificationResponseReceivedListener((response) => {
+        const id = response.notification.request.identifier;
+        if (id.startsWith('workout-')) {
+          router.push('/(tabs)');
+        } else if (id.startsWith('water-')) {
+          router.push('/water');
+        } else if (id.startsWith('weight')) {
+          router.push('/bodyweight');
+        }
+      });
+
+    return () => {
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
   }, []);
 
   return (
@@ -52,8 +80,10 @@ export default function RootLayout() {
         <Stack.Screen name="water/index" />
         <Stack.Screen name="exercises/index" />
         <Stack.Screen name="settings/backup" />
+        <Stack.Screen name="settings/notifications" />
       </Stack>
       <Toast />
     </GestureHandlerRootView>
   );
 }
+

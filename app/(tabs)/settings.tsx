@@ -239,6 +239,12 @@ export default function SettingsScreen() {
           icon="🏋️"
           onPress={() => router.push('/exercises')}
         />
+        <View style={styles.divider} />
+        <DataRow
+          label="Notifications"
+          icon="🔔"
+          onPress={() => router.push('/settings/notifications')}
+        />
       </View>
 
       {/* ── Data ────────────────────────────────── */}
