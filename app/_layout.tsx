@@ -44,8 +44,8 @@ export default function RootLayout() {
         <Stack.Screen name="routines/day-editor" />
         <Stack.Screen name="routines/[id]" />
         <Stack.Screen name="history/[id]" />
-        <Stack.Screen name="bodyweight" />
-        <Stack.Screen name="water" />
+        <Stack.Screen name="bodyweight/index" />
+        <Stack.Screen name="water/index" />
       </Stack>
     </GestureHandlerRootView>
   );

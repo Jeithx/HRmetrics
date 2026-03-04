@@ -4,6 +4,11 @@ import { MuscleGroup } from '../types';
 const DB_NAME = 'replogger.db';
 
 let db: SQLite.SQLiteDatabase | null = null;
+let dbInitialized = false;
+
+export function isDbReady(): boolean {
+  return dbInitialized;
+}
 
 export function getDatabase(): SQLite.SQLiteDatabase {
   if (!db) {
@@ -118,6 +123,7 @@ export async function initializeDatabase(): Promise<void> {
 
   await seedExercisesIfEmpty(database);
   seedSettingsIfEmpty(database);
+  dbInitialized = true;
 }
 
 function seedSettingsIfEmpty(database: SQLite.SQLiteDatabase): void {

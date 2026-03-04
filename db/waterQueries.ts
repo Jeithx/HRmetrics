@@ -1,4 +1,4 @@
-import { getDatabase } from './database';
+import { getDatabase, isDbReady } from './database';
 import { WaterEntry, WaterDaySummary, WaterStats } from '../types';
 
 function localDateStr(): string {
@@ -21,6 +21,7 @@ function rowToEntry(r: { id: number; amount_ml: number; recorded_at: string; not
 }
 
 export function insertWaterEntry(amountMl: number, notes?: string): number {
+  if (!isDbReady()) return -1;
   const db = getDatabase();
   const result = db.runSync(
     'INSERT INTO water_intake_entries (amount_ml, recorded_at, notes) VALUES (?, ?, ?)',
@@ -30,6 +31,7 @@ export function insertWaterEntry(amountMl: number, notes?: string): number {
 }
 
 export function getWaterEntriesToday(): WaterEntry[] {
+  if (!isDbReady()) return [];
   const db = getDatabase();
   const rows = db.getAllSync<{ id: number; amount_ml: number; recorded_at: string; notes: string | null }>(
     `SELECT id, amount_ml, recorded_at, notes FROM water_intake_entries
@@ -41,6 +43,7 @@ export function getWaterEntriesToday(): WaterEntry[] {
 }
 
 export function getTodaysTotalMl(): number {
+  if (!isDbReady()) return 0;
   const db = getDatabase();
   const row = db.getFirstSync<{ total: number }>(
     `SELECT COALESCE(SUM(amount_ml), 0) as total FROM water_intake_entries
@@ -51,6 +54,7 @@ export function getTodaysTotalMl(): number {
 }
 
 export function getWaterEntriesByDate(date: string): WaterEntry[] {
+  if (!isDbReady()) return [];
   const db = getDatabase();
   const rows = db.getAllSync<{ id: number; amount_ml: number; recorded_at: string; notes: string | null }>(
     `SELECT id, amount_ml, recorded_at, notes FROM water_intake_entries
@@ -62,6 +66,7 @@ export function getWaterEntriesByDate(date: string): WaterEntry[] {
 }
 
 export function getWaterHistory(limit: number, offset: number): WaterDaySummary[] {
+  if (!isDbReady()) return [];
   const db = getDatabase();
   return db.getAllSync<WaterDaySummary>(
     `SELECT substr(recorded_at, 1, 10) as date, SUM(amount_ml) as totalMl
@@ -74,6 +79,7 @@ export function getWaterHistory(limit: number, offset: number): WaterDaySummary[
 }
 
 export function getWaterRange(startDate: string, endDate: string): WaterDaySummary[] {
+  if (!isDbReady()) return [];
   const db = getDatabase();
   return db.getAllSync<WaterDaySummary>(
     `SELECT substr(recorded_at, 1, 10) as date, SUM(amount_ml) as totalMl
@@ -86,11 +92,13 @@ export function getWaterRange(startDate: string, endDate: string): WaterDaySumma
 }
 
 export function deleteWaterEntry(id: number): void {
+  if (!isDbReady()) return;
   const db = getDatabase();
   db.runSync('DELETE FROM water_intake_entries WHERE id = ?', [id]);
 }
 
 export function getWaterStreak(goalMl: number): number {
+  if (!isDbReady()) return 0;
   const db = getDatabase();
   const today = localDateStr();
   const rows = db.getAllSync<{ date: string; total: number }>(
@@ -124,6 +132,7 @@ export function getWaterStreak(goalMl: number): number {
 }
 
 export function getWaterStats(goalMl: number): WaterStats {
+  if (!isDbReady()) return { todayTotal: 0, sevenDayAvg: 0, thirtyDayAvg: 0, bestDay: null, currentStreak: 0 };
   const db = getDatabase();
   const today = localDateStr();
 

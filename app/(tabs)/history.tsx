@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Reanimated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SkeletonCard } from '../../components/SkeletonLoader';
 import { useWaterStore } from '../../store/useWaterStore';
@@ -458,11 +458,11 @@ function WaterDayModal({
   const [entries, setEntries] = useState<WaterEntry[]>([]);
   const { waterUnit } = useWaterStore();
 
-  useCallback(() => {
+  useEffect(() => {
     try {
       setEntries(getWaterEntriesByDate(date));
     } catch {}
-  }, [date])();
+  }, [date]);
 
   function fmtTime(iso: string) {
     const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'));
@@ -506,9 +506,9 @@ function WaterHistoryChart({ goalMl }: { goalMl: number }) {
   const start = getLocalDateStr(29);
   const [rangeData, setRangeData] = useState<{ date: string; totalMl: number }[]>([]);
 
-  useCallback(() => {
+  useEffect(() => {
     try { setRangeData(getWaterRange(start, end)); } catch {}
-  }, [start, end])();
+  }, [start, end]);
 
   const dates = Array.from({ length: 30 }, (_, i) => getLocalDateStr(29 - i));
   const dataMap = new Map(rangeData.map((d) => [d.date, d.totalMl]));
@@ -551,11 +551,13 @@ function WaterTab() {
   const { stats, history, waterUnit, dailyGoalMl, loadHistory, loadStats, loadSettings } = useWaterStore();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  useCallback(() => {
-    loadSettings();
-    loadHistory();
-    loadStats();
-  }, [loadSettings, loadHistory, loadStats])();
+  useFocusEffect(
+    useCallback(() => {
+      loadSettings();
+      loadHistory();
+      loadStats();
+    }, [loadSettings, loadHistory, loadStats])
+  );
 
   const statCards = [
     { label: '7-DAY AVG', value: stats ? formatWater(stats.sevenDayAvg, waterUnit) : '—' },
