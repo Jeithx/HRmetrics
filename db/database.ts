@@ -13,13 +13,22 @@ export function isDbReady(): boolean {
 export function getDatabase(): SQLite.SQLiteDatabase {
   if (!db) {
     db = SQLite.openDatabaseSync(DB_NAME);
+    // Run schema creation synchronously the first time the DB is opened,
+    // so tables always exist before any component calls getSetting/getFirst/etc.
+    runSchemaSync(db);
   }
   return db;
 }
 
+/** Called by _layout.tsx for seed data (exercises). Still needed for async seed step. */
 export async function initializeDatabase(): Promise<void> {
-  const database = getDatabase();
+  const database = getDatabase(); // schema already applied by getDatabase()
+  await seedExercisesIfEmpty(database);
+  seedSettingsIfEmpty(database);
+  dbInitialized = true;
+}
 
+function runSchemaSync(database: SQLite.SQLiteDatabase): void {
   database.execSync(`PRAGMA journal_mode = WAL;`);
   database.execSync(`PRAGMA foreign_keys = ON;`);
 
@@ -121,9 +130,29 @@ export async function initializeDatabase(): Promise<void> {
     );
   `);
 
-  await seedExercisesIfEmpty(database);
-  seedSettingsIfEmpty(database);
-  dbInitialized = true;
+  // Seed settings synchronously so getSetting() works immediately after getDatabase()
+  seedSettingsIfEmptySync(database);
+}
+
+function seedSettingsIfEmptySync(database: SQLite.SQLiteDatabase): void {
+  // Create app_settings table was just done above; now seed defaults
+  const defaults: { key: string; value: string }[] = [
+    { key: 'rest_timer_seconds', value: '90' },
+    { key: 'weight_unit', value: 'kg' },
+    { key: 'active_routine_id', value: '' },
+    { key: 'last_used_routine_day_id', value: '' },
+    { key: 'current_phase', value: '' },
+    { key: 'phase_start_date', value: '' },
+    { key: 'phase_goal_weight', value: '' },
+    { key: 'daily_water_goal_ml', value: '2500' },
+    { key: 'water_unit', value: 'ml' },
+  ];
+  for (const row of defaults) {
+    database.runSync(
+      'INSERT INTO app_settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO NOTHING;',
+      [row.key, row.value]
+    );
+  }
 }
 
 function seedSettingsIfEmpty(database: SQLite.SQLiteDatabase): void {
