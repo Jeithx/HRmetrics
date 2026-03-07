@@ -3,14 +3,14 @@ import { Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useAnimatedProps,
   withRepeat,
   withSequence,
   withTiming,
   withSpring,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
-import Svg, { Rect, Path, G } from 'react-native-svg';
+import Svg, { Rect, Path } from 'react-native-svg';
 import { Colors } from '../constants/theme';
 
 export type RexMood = 'happy' | 'thinking' | 'excited' | 'neutral';
@@ -19,40 +19,56 @@ interface Props {
   mood?: RexMood;
   size?: number;
   animated?: boolean;
-  onBounce?: boolean; // trigger bounce when true
+  onBounce?: boolean;
 }
 
-// Animated SVG Rect for eye blink
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
 
-function getMouthPath(mood: RexMood, scale: number): string {
-  const s = scale / 80;
+function getMouthPath(mood: RexMood, s: number): string {
   if (mood === 'happy') {
-    // Slight upward arc
     return `M ${22 * s},${52 * s} Q ${40 * s},${62 * s} ${58 * s},${52 * s}`;
   }
   if (mood === 'excited') {
-    // Big upward arc
     return `M ${18 * s},${51 * s} Q ${40 * s},${67 * s} ${62 * s},${51 * s}`;
   }
   if (mood === 'thinking') {
-    // Slight downward curve
     return `M ${24 * s},${54 * s} Q ${40 * s},${50 * s} ${56 * s},${54 * s}`;
   }
-  // neutral — flat line
   return `M ${26 * s},${54 * s} L ${54 * s},${54 * s}`;
 }
 
-export default function RexMascot({ mood = 'neutral', size = 80, animated = true, onBounce = false }: Props) {
+export default function RexMascot({
+  mood = 'neutral',
+  size = 80,
+  animated = true,
+  onBounce = false,
+}: Props) {
+  const s = size / 80;
+
+  const eyeW = 12 * s;
+  const eyeFullH = 8 * s;
+  const eyeRx = 3 * s;
+  const eyeLx = 20 * s;
+  const eyeRx2 = 48 * s;
+  const eyeCenterY = 27 * s + eyeFullH / 2; // fixed center Y for both eyes
+
+  // Normal height for left eye depends on mood
+  const normalLeftH = mood === 'thinking' ? eyeFullH * 0.5 : eyeFullH;
+
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
-  const eyeHeightL = useSharedValue(1);
-  const eyeHeightR = useSharedValue(1);
+  const eyeLH = useSharedValue(normalLeftH);
+  const eyeRH = useSharedValue(eyeFullH);
   const prevBounce = useRef(false);
+  const normalLeftHRef = useRef(normalLeftH);
 
-  const s = size / 80; // scale factor for all SVG coords
+  // Sync left eye height when mood changes
+  useEffect(() => {
+    normalLeftHRef.current = mood === 'thinking' ? eyeFullH * 0.5 : eyeFullH;
+    eyeLH.value = withTiming(normalLeftHRef.current, { duration: 150 });
+  }, [mood]);
 
-  // Idle float animation
+  // Idle float
   useEffect(() => {
     if (!animated) return;
     translateY.value = withRepeat(
@@ -65,7 +81,7 @@ export default function RexMascot({ mood = 'neutral', size = 80, animated = true
     );
   }, [animated]);
 
-  // Bounce on new insights
+  // Bounce
   useEffect(() => {
     if (onBounce && !prevBounce.current) {
       scale.value = withSpring(1.15, { damping: 6, stiffness: 200 }, () => {
@@ -79,38 +95,30 @@ export default function RexMascot({ mood = 'neutral', size = 80, animated = true
     transform: [{ translateY: translateY.value }, { scale: scale.value }],
   }));
 
-  const eyeLStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleY: eyeHeightL.value }],
+  // Use animatedProps for SVG Rect — style.transform is not supported on SVG elements
+  const leftEyeProps = useAnimatedProps(() => ({
+    height: eyeLH.value,
+    y: eyeCenterY - eyeLH.value / 2,
   }));
-  const eyeRStyle = useAnimatedStyle(() => ({
-    transform: [{ scaleY: eyeHeightR.value }],
+
+  const rightEyeProps = useAnimatedProps(() => ({
+    height: eyeRH.value,
+    y: eyeCenterY - eyeRH.value / 2,
   }));
 
   const handleTap = () => {
-    // Blink both eyes
-    eyeHeightL.value = withSequence(
+    const returnL = normalLeftHRef.current;
+    eyeLH.value = withSequence(
       withTiming(0, { duration: 80 }),
-      withTiming(1, { duration: 80 })
+      withTiming(returnL, { duration: 80 })
     );
-    eyeHeightR.value = withSequence(
+    eyeRH.value = withSequence(
       withTiming(0, { duration: 80 }),
-      withTiming(1, { duration: 80 })
+      withTiming(eyeFullH, { duration: 80 })
     );
   };
 
-  const eyeW = 12 * s;
-  const eyeH = 8 * s;
-  const eyeRx = 3 * s;
-  const eyeLx = 20 * s;
-  const eyeRx2 = 48 * s;
-  const eyeY = 27 * s;
-
-  // For thinking mood, left eye is narrower
-  const leftEyeH = mood === 'thinking' ? eyeH * 0.5 : eyeH;
-  const leftEyeY = mood === 'thinking' ? eyeY + eyeH * 0.25 : eyeY;
-
-  const mouthPath = getMouthPath(mood, size);
-  const strokeColor = mood === 'excited' ? Colors.primary : Colors.primary;
+  const mouthPath = getMouthPath(mood, s);
 
   return (
     <Pressable onPress={handleTap}>
@@ -129,35 +137,27 @@ export default function RexMascot({ mood = 'neutral', size = 80, animated = true
           />
 
           {/* Left eye */}
-          <G>
-            <AnimatedRect
-              x={eyeLx}
-              y={leftEyeY}
-              width={eyeW}
-              height={leftEyeH}
-              rx={eyeRx}
-              fill={Colors.primary}
-              style={eyeLStyle}
-            />
-          </G>
+          <AnimatedRect
+            x={eyeLx}
+            width={eyeW}
+            rx={eyeRx}
+            fill={Colors.primary}
+            animatedProps={leftEyeProps}
+          />
 
           {/* Right eye */}
-          <G>
-            <AnimatedRect
-              x={eyeRx2}
-              y={eyeY}
-              width={eyeW}
-              height={eyeH}
-              rx={eyeRx}
-              fill={Colors.primary}
-              style={eyeRStyle}
-            />
-          </G>
+          <AnimatedRect
+            x={eyeRx2}
+            width={eyeW}
+            rx={eyeRx}
+            fill={Colors.primary}
+            animatedProps={rightEyeProps}
+          />
 
           {/* Mouth */}
           <Path
             d={mouthPath}
-            stroke={strokeColor}
+            stroke={Colors.primary}
             strokeWidth={2.5 * s}
             strokeLinecap="round"
             fill="none"
@@ -195,11 +195,10 @@ const CELEBRATE_IDS = new Set([
 ]);
 
 export function moodFromInsight(id: string | undefined): RexMood {
-  if (!id || id === 'DEFAULT') return 'happy'; // everything is fine
-  // Prefix matches for dynamic IDs
+  if (!id || id === 'DEFAULT') return 'happy';
   if (id.startsWith('NEW_PR_') || id.startsWith('MILESTONE_')) return 'excited';
+  if (id.startsWith('PLATEAU_')) return 'thinking';
   if (CELEBRATE_IDS.has(id)) return 'excited';
   if (PROBLEM_IDS.has(id)) return 'thinking';
-  // Informational / neutral rules
   return 'neutral';
 }

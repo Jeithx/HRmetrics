@@ -1,10 +1,9 @@
 import { create } from 'zustand';
 import { getDatabase } from '../db/database';
 import { getSetting, setSetting } from '../db/settingsQueries';
-import { getWorkoutHistory } from '../db/historyQueries';
+import { getWorkoutHistory, getAllPRs } from '../db/historyQueries';
 import { getBodyWeightEntries } from '../db/bodyWeightQueries';
 import { getWaterHistory } from '../db/waterQueries';
-import { getAllPRs } from '../db/historyQueries';
 import {
   Insight,
   InsightData,

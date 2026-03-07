@@ -591,8 +591,8 @@ function checkOvertrainingRisk(data: InsightData): Insight | null {
   const sorted = [...data.workouts].sort((a, b) => parseDateMs(b.startedAt) - parseDateMs(a.startedAt));
   let consecutive = 1;
   for (let i = 1; i < Math.min(sorted.length, 10); i++) {
-    const prevDate = sorted[i - 1].startedAt.slice(0, 10);
-    const currDate = sorted[i].startedAt.slice(0, 10);
+    const prevDate = sorted[i - 1].startedAt.slice(0, 10) + 'T00:00:00Z';
+    const currDate = sorted[i].startedAt.slice(0, 10) + 'T00:00:00Z';
     const gap = parseDateMs(prevDate) - parseDateMs(currDate);
     if (gap <= 86400000 && gap >= 0) consecutive++;
     else break;
