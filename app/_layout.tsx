@@ -3,6 +3,8 @@ import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as Notifications from 'expo-notifications';
+import { registerWidgetTaskHandler } from 'react-native-android-widget';
+import { widgetTaskHandler } from '../widgets/widgetTaskHandler';
 import { initializeDatabase } from '../db/database';
 import { getSetting } from '../db/settingsQueries';
 import { useRoutineStore } from '../store/useRoutineStore';
@@ -12,6 +14,9 @@ import { useInsightStore } from '../store/useInsightStore';
 import { requestPermissions } from '../utils/notificationService';
 import { Colors } from '../constants/theme';
 import Toast from '../components/Toast';
+
+// Register widget task handler at module level (runs before any React render)
+registerWidgetTaskHandler(widgetTaskHandler);
 
 export default function RootLayout() {
   const loadRoutines = useRoutineStore((s) => s.loadRoutines);
