@@ -23,7 +23,20 @@
       "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(''icon:'', d[''expo''].get\\(''icon''\\)\\); print\\(''android adaptive:'', d[''expo''].get\\(''android'',{}\\).get\\(''adaptiveIcon''\\)\\)\")",
       "Bash(npm install react-native-android-widget --legacy-peer-deps)",
       "Bash(xargs grep -l \"drawWidget\\\\|WidgetTaskHandler\\\\|widgetName\\\\|widgetId\")",
-      "Bash(xargs grep -l \"FlexWidgetStyle\\\\|gap\\\\|ColorProp\")"
+      "Bash(xargs grep -l \"FlexWidgetStyle\\\\|gap\\\\|ColorProp\")",
+      "Bash(eas build --platform android --profile preview)",
+      "Bash(python3 -c \"import json,sys; p=json.load\\(sys.stdin\\); [print\\(k,v\\) for k,v in p.get\\(''dependencies'',{}\\).items\\(\\) if ''android-widget'' in k or ''peer'' in k.lower\\(\\)]\")",
+      "Bash(eas build:list --platform android --limit 1)",
+      "Bash(eas.json:*)",
+      "Bash(eas build --platform android --profile preview --no-wait)",
+      "Bash(eas build:view 0ae79985-e545-4edf-bb24-36bb9e32541f)",
+      "Bash(npm install react-native-worklets --legacy-peer-deps)",
+      "Bash(npm install react-native-safe-area-context --legacy-peer-deps)",
+      "Bash(npm install react-native-screens react-native-gesture-handler react-native-svg --legacy-peer-deps)",
+      "Bash(grep -r \"from ''expo-\" --include=\"*.ts\" --include=\"*.tsx\" -h .)",
+      "Bash(grep -r \"from ''expo-\" app/ components/ store/ utils/ db/ widgets/ --include=\"*.ts\" --include=\"*.tsx\" -h)",
+      "Bash(npm install expo-linking expo-constants @expo/metro-runtime --legacy-peer-deps)",
+      "Bash(grep -A 10 '\"\"peerDependencies\"\"')"
     ]
   }
 }
