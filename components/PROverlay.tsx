@@ -12,6 +12,8 @@ import { PRResult } from '../types';
 import { WeightUnit } from '../utils/weightUtils';
 import { kgToDisplay } from '../utils/weightUtils';
 import { Colors, Spacing, Typography, BorderRadius } from '../constants/theme';
+import SupportCTA from './SupportCTA';
+import { shouldShowSupportPrompt } from '../utils/supporterPrompt';
 
 interface PROverlayProps {
   prs: PRResult[];
@@ -22,6 +24,7 @@ interface PROverlayProps {
 
 export default function PROverlay({ prs, unit, visible, onDone }: PROverlayProps) {
   const [index, setIndex] = useState(0);
+  const [showCTA, setShowCTA] = useState(false);
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -46,6 +49,8 @@ export default function PROverlay({ prs, unit, visible, onDone }: PROverlayProps
     opacity.value = 0;
     scale.value = withSpring(1, { damping: 12, stiffness: 180 });
     opacity.value = withTiming(1, { duration: 300 });
+
+    setShowCTA(shouldShowSupportPrompt('new_pr'));
 
     try {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -107,6 +112,7 @@ export default function PROverlay({ prs, unit, visible, onDone }: PROverlayProps
           <Text style={styles.counter}>{index + 1} of {prs.length}</Text>
         )}
         <Text style={styles.dismiss}>Tap to dismiss</Text>
+        <SupportCTA visible={showCTA} onDismiss={() => setShowCTA(false)} />
       </Animated.View>
     </Animated.View>
   );

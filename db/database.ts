@@ -130,6 +130,18 @@ function runSchemaSync(database: SQLite.SQLiteDatabase): void {
     );
   `);
 
+  database.execSync(`
+    CREATE TABLE IF NOT EXISTS supporter_status (
+      id INTEGER PRIMARY KEY,
+      tier TEXT NOT NULL,
+      purchased_at TEXT NOT NULL,
+      transaction_id TEXT,
+      lifter_title_id TEXT,
+      rex_costume TEXT,
+      active_theme_id TEXT
+    );
+  `);
+
   // Seed settings synchronously so getSetting() works immediately after getDatabase()
   seedSettingsIfEmptySync(database);
 }
@@ -146,6 +158,9 @@ function seedSettingsIfEmptySync(database: SQLite.SQLiteDatabase): void {
     { key: 'phase_goal_weight', value: '' },
     { key: 'daily_water_goal_ml', value: '2500' },
     { key: 'water_unit', value: 'ml' },
+    { key: 'first_launch_date', value: new Date().toISOString() },
+    { key: 'support_prompt_count', value: '0' },
+    { key: 'support_prompt_last_shown', value: '' },
   ];
   for (const row of defaults) {
     database.runSync(

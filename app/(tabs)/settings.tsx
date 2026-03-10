@@ -11,6 +11,7 @@ import {
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { router, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { getSetting, setSetting } from '../../db/settingsQueries';
 import {
   getWorkoutSetsForExport,
@@ -20,6 +21,9 @@ import {
 import { useRoutineStore } from '../../store/useRoutineStore';
 import { useWaterStore } from '../../store/useWaterStore';
 import { BorderRadius, Colors, Spacing, Typography } from '../../constants/theme';
+import { useSupporterStore } from '../../store/useSupporterStore';
+import SupporterBadge from '../../components/SupporterBadge';
+import { SUPPORTER_TIERS } from '../../constants/supporter';
 
 const WATER_COLOR = '#4FC3F7';
 
@@ -97,6 +101,7 @@ export default function SettingsScreen() {
   const [exporting, setExporting] = useState(false);
   const [waterGoalInput, setWaterGoalInput] = useState('');
   const { dailyGoalMl, waterUnit, setDailyGoal, setWaterUnit, loadSettings: loadWaterSettings } = useWaterStore();
+  const { status, isSupporter, tier, loadStatus, restorePurchases } = useSupporterStore();
 
   useFocusEffect(
     useCallback(() => {
@@ -106,7 +111,8 @@ export default function SettingsScreen() {
       setRestTimer(REST_OPTIONS.includes(r as RestOption) ? (r as RestOption) : '90');
       loadWaterSettings();
       setWaterGoalInput(String(dailyGoalMl));
-    }, [loadWaterSettings, dailyGoalMl])
+      loadStatus();
+    }, [loadWaterSettings, dailyGoalMl, loadStatus])
   );
 
   const handleWaterGoalBlur = () => {
@@ -207,9 +213,37 @@ export default function SettingsScreen() {
     );
   };
 
+  const handleRestorePurchases = async () => {
+    await restorePurchases();
+    Alert.alert('Restore Complete', isSupporter ? 'Your purchase has been restored.' : 'No previous purchase found.');
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.pageTitle}>Settings</Text>
+
+      {/* ── Supporter Card ─────────────────────── */}
+      {isSupporter && tier ? (
+        <Pressable
+          style={styles.supporterCard}
+          onPress={() => router.push('/settings/supporter')}
+        >
+          <View style={styles.supporterCardLeft}>
+            <SupporterBadge tier={tier} size="md" />
+            <Text style={styles.supporterCardThank}>Thank you 🙏</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color={Colors.textTertiary} />
+        </Pressable>
+      ) : (
+        <Pressable
+          style={styles.supportDevRow}
+          onPress={() => router.push('/settings/supporter')}
+        >
+          <Text style={styles.supportDevIcon}>⚡</Text>
+          <Text style={styles.supportDevText}>Support Development</Text>
+          <Ionicons name="chevron-forward" size={16} color={Colors.primary} />
+        </Pressable>
+      )}
 
       {/* ── Preferences ─────────────────────────── */}
       <SectionHeader title="PREFERENCES" />
@@ -315,9 +349,21 @@ export default function SettingsScreen() {
         <View style={styles.divider} />
         <View style={styles.taglineRow}>
           <Text style={styles.tagline}>
-            Built for lifters who care about the details.
+            Built by a CS student, one commit at a time.
           </Text>
         </View>
+        <View style={styles.divider} />
+        <DataRow
+          label="Support Development →"
+          icon="⚡"
+          onPress={() => router.push('/settings/supporter')}
+        />
+        <View style={styles.divider} />
+        <DataRow
+          label="Restore Purchases"
+          icon="🔄"
+          onPress={handleRestorePurchases}
+        />
       </View>
     </ScrollView>
   );
@@ -447,5 +493,41 @@ const styles = StyleSheet.create({
   waterGoalUnit: {
     color: Colors.textSecondary,
     fontSize: Typography.size.sm,
+  },
+  supporterCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  supporterCardLeft: { gap: Spacing.xs },
+  supporterCardThank: {
+    color: Colors.textSecondary,
+    fontSize: Typography.size.xs,
+  },
+  supportDevRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  supportDevIcon: { fontSize: 16 },
+  supportDevText: {
+    flex: 1,
+    color: Colors.primary,
+    fontSize: Typography.size.md,
+    fontWeight: Typography.weight.semibold,
   },
 });

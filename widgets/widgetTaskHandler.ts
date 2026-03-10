@@ -3,10 +3,11 @@ import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { getDatabase } from '../db/database';
 import { getWeekStats } from '../db/historyQueries';
 import { getTodaysTotalMl } from '../db/waterQueries';
-import { getSetting } from '../db/settingsQueries';
+import { getSetting, setSetting } from '../db/settingsQueries';
 import {
   generateInsights,
-  DEFAULT_INSIGHT,
+  selectDailyInsights,
+  getDailyDefault,
   InsightData,
   WorkoutSetDetail,
 } from '../utils/insightEngine';
@@ -103,7 +104,14 @@ function fetchWidgetData() {
     };
 
     const allInsights = generateInsights(insightData);
-    const topInsight = allInsights.length > 0 ? allInsights[0] : DEFAULT_INSIGHT;
+    const shownIdsStr = getSetting('rex_shown_ids') || '';
+    const recentIds = shownIdsStr ? shownIdsStr.split(',').filter(Boolean) : [];
+    const selected = selectDailyInsights(allInsights, [], recentIds);
+    const topInsight = selected[0] ?? getDailyDefault();
+    if (topInsight.id !== 'DEFAULT') {
+      const newRecentIds = [topInsight.id, ...recentIds.filter((id) => id !== topInsight.id)].slice(0, 3);
+      setSetting('rex_shown_ids', newRecentIds.join(','));
+    }
     const weekStats = getWeekStats();
     const todayMl = getTodaysTotalMl();
     const waterPct = dailyWaterGoalMl > 0
@@ -112,7 +120,7 @@ function fetchWidgetData() {
 
     return { topInsight, weekStats, waterPct };
   } catch {
-    return { topInsight: DEFAULT_INSIGHT, weekStats: { count: 0, volume: 0 }, waterPct: 0 };
+    return { topInsight: getDailyDefault(), weekStats: { count: 0, volume: 0 }, waterPct: 0 };
   }
 }
 

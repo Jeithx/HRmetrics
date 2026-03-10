@@ -43,7 +43,11 @@
       "Bash(head -20 \"app/\\(tabs\\)/settings.tsx\")",
       "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''jest:'', d.get\\(''jest'',{}\\)\\); print\\(''scripts:'', {k:v for k,v in d.get\\(''scripts'',{}\\).items\\(\\) if ''test'' in k.lower\\(\\)}\\)\")",
       "Bash(npm install --save-dev jest ts-jest @types/jest --legacy-peer-deps)",
-      "Bash(npx jest --no-coverage)"
+      "Bash(npx jest --no-coverage)",
+      "Bash(adb devices)",
+      "Bash(npm install react-native-iap --legacy-peer-deps)",
+      "Bash(node -e \"const iap = require\\(''react-native-iap''\\); console.log\\(Object.keys\\(iap\\).join\\(''\\\\n''\\)\\)\")",
+      "Bash(npm test -- --passWithNoTests)"
     ]
   }
 }

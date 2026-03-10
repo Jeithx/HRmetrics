@@ -3,12 +3,14 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useInsightStore } from '../store/useInsightStore';
+import { useSupporterStore } from '../store/useSupporterStore';
 import { getWeekStats } from '../db/historyQueries';
 import { getBodyWeightStats } from '../db/bodyWeightQueries';
 import { getSetting } from '../db/settingsQueries';
 import { kgToDisplay, formatVolume, WeightUnit } from '../utils/weightUtils';
 import { getWaterHistory } from '../db/waterQueries';
 import RexMascot from '../components/RexMascot';
+import SupporterBadge from '../components/SupporterBadge';
 import { BorderRadius, Colors, Spacing, Typography } from '../constants/theme';
 import type { Insight } from '../utils/insightEngine';
 
@@ -44,8 +46,10 @@ function InsightCard({ insight }: { insight: Insight }) {
 export default function RexScreen() {
   const insets = useSafeAreaInsets();
   const { insights, topInsight, dailyMood, isLoading, lastGeneratedAt } = useInsightStore();
+  const { status, tier } = useSupporterStore();
 
   const mood = dailyMood;
+  const rexCostume = status?.rexCostume === 'sunglasses' ? 'sunglasses' : 'none';
 
   // Weekly summary
   let weekCount = 0;
@@ -90,9 +94,10 @@ export default function RexScreen() {
 
       {/* REX face */}
       <View style={styles.mascotSection}>
-        <RexMascot mood={mood} size={120} animated />
+        <RexMascot mood={mood} size={120} animated costume={rexCostume} />
         <Text style={styles.rexName}>REX</Text>
         <Text style={styles.rexSubtitle}>Rep EXpert</Text>
+        {tier && <SupporterBadge tier={tier} size="sm" />}
         {lastGeneratedAt && (
           <Text style={styles.lastUpdated}>
             Last analyzed: {new Date(lastGeneratedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

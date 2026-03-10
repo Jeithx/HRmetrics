@@ -21,17 +21,16 @@ const CATEGORY_COLOR: Record<string, ColorProp> = {
 
 const DEFAULT_ACCENT: ColorProp = '#C8FF00';
 
-function StatCol({ value, label, period, accent }: {
-  value: string; label: string; period: string; accent?: ColorProp;
+function StatCol({ value, label, accent }: {
+  value: string; label: string; accent?: ColorProp;
 }) {
   return (
     <FlexWidget style={{ flexDirection: 'column', alignItems: 'center', flexGap: 2 }}>
       <TextWidget
         text={value}
-        style={{ color: accent ?? '#CCCCCC', fontSize: 15, fontWeight: 'bold' }}
+        style={{ color: accent ?? '#CCCCCC', fontSize: 14, fontWeight: 'bold' }}
       />
-      <TextWidget text={label} style={{ color: '#888888', fontSize: 8 }} />
-      <TextWidget text={period} style={{ color: '#555555', fontSize: 8 }} />
+      <TextWidget text={label} style={{ color: '#666666', fontSize: 9 }} />
     </FlexWidget>
   );
 }
@@ -58,41 +57,55 @@ export function RexWideWidget({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#1A1A1A',
-        borderRadius: 20,
-        overflow: 'hidden',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        // Use 16dp — matches Android 12+ system_app_widget_background_radius.
+        // No overflow: hidden on root — that clips at rectangular bounds,
+        // causing corners to look different from the background radius.
+        borderRadius: 16,
+        paddingLeft: 14,
+        paddingRight: 14,
+        paddingTop: 8,
+        paddingBottom: 8,
       }}
     >
-      {/* REX label */}
+      {/* REX label — fixed width, never shrinks */}
       <TextWidget
         text="REX"
-        style={{ color: '#C8FF00', fontSize: 13, fontWeight: 'bold' }}
+        style={{ color: '#C8FF00', fontSize: 12, fontWeight: 'bold' }}
       />
 
       {/* Divider */}
-      <FlexWidget style={{ width: 1, height: 36, backgroundColor: '#2A2A2A', marginHorizontal: 14 }} />
+      <FlexWidget style={{
+        width: 1,
+        height: 30,
+        backgroundColor: '#333333',
+        marginLeft: 12,
+        marginRight: 12,
+      }} />
 
-      {/* Insight */}
-      <FlexWidget
-        style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexGap: 6, overflow: 'hidden' }}
-      >
-        <TextWidget text={insightIcon} style={{ fontSize: 15 }} />
+      {/* Insight section — takes all remaining space */}
+      <FlexWidget style={{ flex: 1, flexDirection: 'row', alignItems: 'center', flexGap: 6 }}>
+        <TextWidget text={insightIcon} style={{ fontSize: 14 }} />
         <TextWidget
           text={insightTitle}
-          style={{ color: accent, fontSize: 12, fontWeight: 'bold' }}
+          style={{ color: accent, fontSize: 11, fontWeight: 'bold' }}
           maxLines={2}
         />
       </FlexWidget>
 
       {/* Divider */}
-      <FlexWidget style={{ width: 1, height: 36, backgroundColor: '#2A2A2A', marginHorizontal: 14 }} />
+      <FlexWidget style={{
+        width: 1,
+        height: 30,
+        backgroundColor: '#333333',
+        marginLeft: 12,
+        marginRight: 12,
+      }} />
 
-      {/* Stats */}
-      <FlexWidget style={{ flexDirection: 'row', flexGap: 14 }}>
-        <StatCol value={String(weekCount)} label="workouts" period="this week" />
-        <StatCol value={vol} label="volume" period="this week" />
-        <StatCol value={`${waterPct}%`} label="hydration" period="today" accent="#4FC3F7" />
+      {/* Stats — fixed, never shrinks */}
+      <FlexWidget style={{ flexDirection: 'row', flexGap: 16, alignItems: 'center' }}>
+        <StatCol value={String(weekCount)} label="workouts" />
+        <StatCol value={vol} label="volume" />
+        <StatCol value={`${waterPct}%`} label="hydration" accent="#4FC3F7" />
       </FlexWidget>
     </FlexWidget>
   );

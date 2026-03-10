@@ -14,12 +14,14 @@ import Svg, { Rect, Path } from 'react-native-svg';
 import { Colors } from '../constants/theme';
 
 export type RexMood = 'happy' | 'thinking' | 'excited' | 'neutral';
+export type RexCostume = 'none' | 'sunglasses';
 
 interface Props {
   mood?: RexMood;
   size?: number;
   animated?: boolean;
   onBounce?: boolean;
+  costume?: RexCostume;
 }
 
 const AnimatedRect = Animated.createAnimatedComponent(Rect);
@@ -42,6 +44,7 @@ export default function RexMascot({
   size = 80,
   animated = true,
   onBounce = false,
+  costume = 'none',
 }: Props) {
   const s = size / 80;
 
@@ -162,6 +165,40 @@ export default function RexMascot({
             strokeLinecap="round"
             fill="none"
           />
+
+          {/* Sunglasses costume */}
+          {costume === 'sunglasses' && (
+            <>
+              {/* Left lens */}
+              <Rect
+                x={eyeLx - 1 * s}
+                y={eyeCenterY - eyeFullH / 2 - 2 * s}
+                width={eyeW + 2 * s}
+                height={eyeFullH + 4 * s}
+                rx={4 * s}
+                fill="#1A1A1A"
+                opacity={0.92}
+              />
+              {/* Right lens */}
+              <Rect
+                x={eyeRx2 - 1 * s}
+                y={eyeCenterY - eyeFullH / 2 - 2 * s}
+                width={eyeW + 2 * s}
+                height={eyeFullH + 4 * s}
+                rx={4 * s}
+                fill="#1A1A1A"
+                opacity={0.92}
+              />
+              {/* Bridge */}
+              <Rect
+                x={eyeLx + eyeW}
+                y={eyeCenterY - 1 * s}
+                width={eyeRx2 - (eyeLx + eyeW)}
+                height={2 * s}
+                fill="#333333"
+              />
+            </>
+          )}
         </Svg>
       </Animated.View>
     </Pressable>
