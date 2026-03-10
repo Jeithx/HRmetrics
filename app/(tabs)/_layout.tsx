@@ -69,6 +69,12 @@ export default function TabLayout() {
           fontSize: 11,
           fontWeight: '500',
         },
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingBottom: 0,
+          paddingTop: 0,
+        },
       }}
     >
       {TAB_CONFIG.map((tab) => (

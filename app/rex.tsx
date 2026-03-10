@@ -106,17 +106,16 @@ export default function RexScreen() {
         <View style={styles.loadingCard}>
           <Text style={styles.loadingText}>Analyzing your data...</Text>
         </View>
-      ) : insights.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <Text style={styles.emptyText}>All good. Nothing to report today. Just show up.</Text>
-        </View>
       ) : (
-        insights.map((insight) => (
-          <InsightCard
-            key={insight.id}
-            insight={insight}
-          />
-        ))
+        (() => {
+          // topInsight is what home showed — always display it first so tapping through is consistent
+          const listed = insights.some((i) => i.id === topInsight.id && i.message === topInsight.message)
+            ? insights
+            : [topInsight, ...insights.filter((i) => i.id !== 'DEFAULT')];
+          return listed.map((insight, idx) => (
+            <InsightCard key={`${insight.id}_${idx}`} insight={insight} />
+          ));
+        })()
       )}
 
       {/* Weekly Summary */}

@@ -262,7 +262,7 @@ function RexInsightCard({ insight, onTap }: { insight: Insight; onTap: () => voi
         <Text style={rexStyles.insightIcon}>{insight.icon}</Text>
         <View style={rexStyles.insightBody}>
           <Text style={rexStyles.insightTitle}>{insight.title}</Text>
-          <Text style={rexStyles.insightMessage} numberOfLines={2}>{insight.message}</Text>
+          <Text style={rexStyles.insightMessage} numberOfLines={3}>{insight.message}</Text>
         </View>
         <Ionicons name="chevron-forward" size={14} color={Colors.textTertiary} />
       </View>

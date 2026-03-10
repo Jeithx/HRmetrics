@@ -304,7 +304,7 @@ function ProgressTab({ unit }: { unit: WeightUnit }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.progressContent}>
+    <ScrollView style={styles.progressScroll} contentContainerStyle={styles.progressContent}>
       <Pressable
         style={({ pressed }) => [styles.exercisePickerBtn, pressed && styles.exercisePickerBtnPressed]}
         onPress={() => setPickerVisible(true)}
@@ -777,6 +777,7 @@ const styles = StyleSheet.create({
   loadingMoreText: { color: Colors.textTertiary, fontSize: Typography.size.sm },
 
   // Progress tab
+  progressScroll: { flex: 1, backgroundColor: Colors.background },
   progressContent: { padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxxl },
   exercisePickerBtn: {
     flexDirection: 'row',

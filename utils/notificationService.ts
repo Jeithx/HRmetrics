@@ -314,17 +314,14 @@ export async function showRestTimerNotification(endTimestamp: number): Promise<v
         await Notifications.cancelScheduledNotificationAsync(REST_COMPLETE_ID).catch(() => { });
 
         const remainingSecs = Math.max(0, Math.ceil((endTimestamp - Date.now()) / 1000));
-        const mins = Math.floor(remainingSecs / 60);
-        const secs = remainingSecs % 60;
-        const timeStr = mins > 0
-            ? `${mins}:${secs.toString().padStart(2, '0')}`
-            : `${remainingSecs}s`;
 
         await Notifications.scheduleNotificationAsync({
             identifier: REST_TIMER_ID,
             content: {
                 title: 'Rest Timer',
-                body: `${timeStr} remaining — tap to return`,
+                // Body stays static; the OS chronometer (chronometerCountDown) shows the
+                // live second-by-second countdown in the notification's time field.
+                body: 'Resting — tap to return',
                 sticky: true,
                 ...(Platform.OS === 'android' && {
                     android: {
