@@ -33,6 +33,107 @@ const MUSCLE_ORDER: MuscleGroup[] = [
 ];
 
 export default function ExercisePicker({ visible, onSelect, onClose }: Props) {
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xl,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    title: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.semibold,
+    },
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      margin: Spacing.lg,
+      paddingHorizontal: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    searchIcon: {
+      marginRight: Spacing.sm,
+    },
+    searchInput: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      paddingVertical: Spacing.md,
+    },
+    list: {
+      paddingBottom: Spacing.xxxl,
+    },
+    groupHeader: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.xs,
+    },
+    exerciseRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    exerciseRowPressed: {
+      backgroundColor: Colors.surface,
+    },
+    exerciseName: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+    },
+    badge: {
+      backgroundColor: Colors.primaryMuted,
+      borderRadius: BorderRadius.sm,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+    },
+    badgeText: {
+      color: Colors.primary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.medium,
+    },
+    customBadge: {
+      backgroundColor: Colors.primaryMuted,
+      borderRadius: BorderRadius.sm,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderWidth: 1,
+      borderColor: Colors.primary,
+    },
+    customBadgeText: {
+      color: Colors.primary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+    },
+    emptyText: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.md,
+      textAlign: 'center',
+      marginTop: Spacing.xxl,
+    },
+  });
   const exercises = useExerciseStore((s) => s.exercises);
   const loadExercises = useExerciseStore((s) => s.loadExercises);
   const [query, setQuery] = useState('');
@@ -155,104 +256,3 @@ export default function ExercisePicker({ visible, onSelect, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semibold,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    margin: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  searchIcon: {
-    marginRight: Spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    paddingVertical: Spacing.md,
-  },
-  list: {
-    paddingBottom: Spacing.xxxl,
-  },
-  groupHeader: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.xs,
-  },
-  exerciseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  exerciseRowPressed: {
-    backgroundColor: Colors.surface,
-  },
-  exerciseName: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.medium,
-  },
-  badge: {
-    backgroundColor: Colors.primaryMuted,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-  },
-  badgeText: {
-    color: Colors.primary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.medium,
-  },
-  customBadge: {
-    backgroundColor: Colors.primaryMuted,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  customBadgeText: {
-    color: Colors.primary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-  },
-  emptyText: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.md,
-    textAlign: 'center',
-    marginTop: Spacing.xxl,
-  },
-});

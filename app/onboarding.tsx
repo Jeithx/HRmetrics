@@ -36,6 +36,100 @@ function complete() {
 }
 
 export default function OnboardingScreen() {
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.background,
+    },
+    topBar: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xxxl,
+      paddingBottom: Spacing.lg,
+    },
+    skipBtn: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+    },
+    skipBtnPressed: { opacity: 0.7 },
+    skipText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+    },
+    scroll: {
+      flex: 1,
+    },
+    card: {
+        width: SCREEN_W,
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        paddingHorizontal: Spacing.xxxl,
+        paddingTop: SCREEN_H * 0.22,
+        gap: Spacing.lg,
+      },
+    emojiWrap: {
+      width: 120,
+      height: 120,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+    },
+    emoji: {
+      fontSize: 80,
+      textAlign: 'center',
+      includeFontPadding: false,
+    },
+    title: {
+      color: Colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+      textAlign: 'center',
+      letterSpacing: -0.5,
+    },
+    subtitle: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.md,
+      textAlign: 'center',
+      lineHeight: 22,
+    },
+    dots: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      paddingVertical: Spacing.xl,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: Colors.border,
+    },
+    dotActive: {
+      backgroundColor: Colors.primary,
+      width: 20,
+      borderRadius: 4,
+    },
+    footer: {
+      paddingHorizontal: Spacing.lg,
+      paddingBottom: Spacing.xxxl,
+    },
+    nextBtn: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.lg,
+      alignItems: 'center',
+    },
+    nextBtnPressed: { opacity: 0.85 },
+    nextText: {
+      color: Colors.background,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+  });
+
   const [index, setIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -119,96 +213,3 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxxl,
-    paddingBottom: Spacing.lg,
-  },
-  skipBtn: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  skipBtnPressed: { opacity: 0.7 },
-  skipText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.medium,
-  },
-  scroll: {
-    flex: 1,
-  },
-  card: {
-      width: SCREEN_W,
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'flex-start', // Öğelerin dikeyde ortalanmak yerine yukarıdan aşağı dizilmesini sağlar
-      paddingHorizontal: Spacing.xxxl,
-      paddingTop: SCREEN_H * 0.22, // Ekran yüksekliğinin %22'si kadar sabit bir üst boşluk bırakır
-      gap: Spacing.lg,
-    },
-  emojiWrap: {
-    width: 120,
-    height: 120,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  emoji: {
-    fontSize: 80,
-    textAlign: 'center',
-    includeFontPadding: false,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-    textAlign: 'center',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.md,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.xl,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.border,
-  },
-  dotActive: {
-    backgroundColor: Colors.primary,
-    width: 20,
-    borderRadius: 4,
-  },
-  footer: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xxxl,
-  },
-  nextBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.lg,
-    alignItems: 'center',
-  },
-  nextBtnPressed: { opacity: 0.85 },
-  nextText: {
-    color: Colors.background,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-});

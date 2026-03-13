@@ -33,6 +33,97 @@ interface Props {
 }
 
 export default function ExerciseFormModal({ visible, onClose, editingExercise }: Props) {
+  const styles = StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    kvWrapper: {
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: Colors.surface,
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      padding: Spacing.xl,
+      paddingBottom: Spacing.xxxl,
+      borderTopWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    title: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+      marginBottom: Spacing.sm,
+    },
+    label: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginTop: Spacing.xs,
+    },
+    input: {
+      backgroundColor: Colors.surfaceElevated,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    chipScroll: {
+      flexGrow: 0,
+    },
+    chipRow: {
+      flexDirection: 'row',
+      gap: Spacing.xs,
+      paddingVertical: Spacing.xs,
+    },
+    chip: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.full,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      backgroundColor: Colors.surfaceElevated,
+    },
+    chipActive: {
+      backgroundColor: Colors.primary,
+      borderColor: Colors.primary,
+    },
+    chipText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    chipTextActive: {
+      color: Colors.background,
+    },
+    error: {
+      color: Colors.error,
+      fontSize: Typography.size.sm,
+      marginTop: Spacing.xs,
+    },
+    saveBtn: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.md,
+      alignItems: 'center',
+      marginTop: Spacing.sm,
+    },
+    saveBtnDisabled: {
+      opacity: 0.4,
+    },
+    saveBtnText: {
+      color: Colors.background,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+  });
   const createExercise = useExerciseStore((s) => s.createExercise);
   const updateExercise = useExerciseStore((s) => s.updateExercise);
   const [name, setName] = useState('');
@@ -133,94 +224,3 @@ export default function ExerciseFormModal({ visible, onClose, editingExercise }:
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  kvWrapper: {
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    padding: Spacing.xl,
-    paddingBottom: Spacing.xxxl,
-    borderTopWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    marginBottom: Spacing.sm,
-  },
-  label: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginTop: Spacing.xs,
-  },
-  input: {
-    backgroundColor: Colors.surfaceElevated,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  chipScroll: {
-    flexGrow: 0,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.xs,
-  },
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surfaceElevated,
-  },
-  chipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  chipText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  chipTextActive: {
-    color: Colors.background,
-  },
-  error: {
-    color: Colors.error,
-    fontSize: Typography.size.sm,
-    marginTop: Spacing.xs,
-  },
-  saveBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    marginTop: Spacing.sm,
-  },
-  saveBtnDisabled: {
-    opacity: 0.4,
-  },
-  saveBtnText: {
-    color: Colors.background,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-});

@@ -1,6 +1,6 @@
 import { getDatabase } from './database';
 
-export type SupporterTier = 'PRE_WORKOUT' | 'CHICKEN_RICE' | 'CHEAT_MEAL';
+export type SupporterTier = 'PRE_WORKOUT' | 'CHICKEN_RICE' | 'CHEAT_MEAL' | 'MASS_GAINER';
 export type RexCostume = 'sunglasses' | null;
 
 export interface SupporterStatus {
@@ -17,6 +17,7 @@ const TIER_ORDER: Record<SupporterTier, number> = {
   PRE_WORKOUT: 1,
   CHICKEN_RICE: 2,
   CHEAT_MEAL: 3,
+  MASS_GAINER: 4,
 };
 
 export function getSupporterStatus(): SupporterStatus | null {
@@ -56,7 +57,7 @@ export function saveSupporterStatus(tier: SupporterTier, transactionId: string):
     return;
   }
 
-  const rexCostume = tier === 'CHEAT_MEAL' ? 'sunglasses' : null;
+  const rexCostume = (tier === 'CHEAT_MEAL' || tier === 'MASS_GAINER') ? 'sunglasses' : null;
 
   if (existing) {
     db.runSync(

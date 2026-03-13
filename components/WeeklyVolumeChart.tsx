@@ -31,6 +31,80 @@ function formatVolume(vol: number): string {
 }
 
 export default function WeeklyVolumeChart() {
+  const styles = StyleSheet.create({
+    container: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      gap: Spacing.sm,
+    },
+    title: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    empty: {
+      height: BAR_MAX_HEIGHT + 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyText: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.sm,
+    },
+    tooltip: {
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      alignSelf: 'center',
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    tooltipText: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    chart: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      height: BAR_MAX_HEIGHT + 20,
+      gap: Spacing.xs,
+    },
+    barCol: {
+      flex: 1,
+      alignItems: 'center',
+      gap: 4,
+    },
+    barContainer: {
+      height: BAR_MAX_HEIGHT,
+      justifyContent: 'flex-end',
+      width: '100%',
+      alignItems: 'center',
+    },
+    bar: {
+      width: '80%',
+      borderRadius: BorderRadius.sm,
+      minWidth: 4,
+    },
+    barCurrent: {
+      backgroundColor: Colors.primary,
+    },
+    barPast: {
+      backgroundColor: Colors.surfaceElevated,
+    },
+    barLabel: {
+      color: Colors.textTertiary,
+      fontSize: 9,
+      textAlign: 'center',
+    },
+    barLabelCurrent: {
+      color: Colors.primary,
+    },
+  });
+
   const [data, setData] = useState<WeeklyVolume[]>([]);
   const [tooltip, setTooltip] = useState<string | null>(null);
 
@@ -96,76 +170,3 @@ export default function WeeklyVolumeChart() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-  },
-  title: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  empty: {
-    height: BAR_MAX_HEIGHT + 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.sm,
-  },
-  tooltip: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    alignSelf: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  tooltipText: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  chart: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: BAR_MAX_HEIGHT + 20,
-    gap: Spacing.xs,
-  },
-  barCol: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  barContainer: {
-    height: BAR_MAX_HEIGHT,
-    justifyContent: 'flex-end',
-    width: '100%',
-    alignItems: 'center',
-  },
-  bar: {
-    width: '80%',
-    borderRadius: BorderRadius.sm,
-    minWidth: 4,
-  },
-  barCurrent: {
-    backgroundColor: Colors.primary,
-  },
-  barPast: {
-    backgroundColor: Colors.surfaceElevated,
-  },
-  barLabel: {
-    color: Colors.textTertiary,
-    fontSize: 9,
-    textAlign: 'center',
-  },
-  barLabelCurrent: {
-    color: Colors.primary,
-  },
-});

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import {
   Alert,
   Modal,
@@ -37,6 +37,7 @@ function ExerciseConfigModal({
   onConfirm,
   onClose,
 }: ExerciseConfigModalProps) {
+  const styles = useMemo(createStyles, []);
   const [sets, setSets] = useState('3');
   const [reps, setReps] = useState('10');
   const [weight, setWeight] = useState('0');
@@ -108,6 +109,7 @@ interface ExerciseRowProps {
 }
 
 function ExerciseRow({ item, index, total, onMoveUp, onMoveDown, onDelete }: ExerciseRowProps) {
+  const styles = useMemo(createStyles, []);
   return (
     <View style={styles.exRow}>
       <View style={styles.exInfo}>
@@ -160,7 +162,157 @@ function ExerciseRow({ item, index, total, onMoveUp, onMoveDown, onDelete }: Exe
 
 // ─── Day Editor Screen ─────────────────────────────────────────────────────
 
+function createStyles() {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: Colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xxl,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+      backgroundColor: Colors.surface,
+    },
+    headerTitle: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.semibold,
+    },
+    doneBtn: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.md,
+    },
+    doneBtnPressed: { opacity: 0.85 },
+    doneBtnText: {
+      color: Colors.background,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.bold,
+    },
+    scrollContent: {
+      padding: Spacing.md,
+      paddingBottom: 100,
+      gap: Spacing.xs,
+    },
+    empty: {
+      alignItems: 'center',
+      paddingTop: Spacing.xxxl,
+      gap: Spacing.sm,
+    },
+    emptyText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.semibold,
+    },
+    emptyHint: { color: Colors.textTertiary, fontSize: Typography.size.sm },
+    exRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    exInfo: { flex: 1, gap: 2 },
+    exName: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    exMeta: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+    reorderBtns: { flexDirection: 'column', gap: 2 },
+    reorderBtn: { padding: 2 },
+    reorderBtnPressed: { opacity: 0.6 },
+    footer: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: Spacing.lg,
+      paddingBottom: Spacing.xxl,
+      backgroundColor: Colors.background,
+      borderTopWidth: 1,
+      borderTopColor: Colors.border,
+    },
+    addExBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.md,
+    },
+    addExBtnPressed: { opacity: 0.85 },
+    addExText: {
+      color: Colors.background,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    configBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+    },
+    configSheet: {
+      backgroundColor: Colors.surfaceElevated,
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      padding: Spacing.xl,
+      gap: Spacing.lg,
+      borderTopWidth: 1,
+      borderColor: Colors.border,
+    },
+    configTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    configRow: { flexDirection: 'row', gap: Spacing.md },
+    configField: { flex: 1, gap: Spacing.xs },
+    configLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    configInput: {
+      backgroundColor: Colors.surface,
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.semibold,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      textAlign: 'center',
+    },
+    confirmBtn: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.md,
+      alignItems: 'center',
+    },
+    confirmBtnPressed: { opacity: 0.85 },
+    confirmBtnText: {
+      color: Colors.background,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+  });
+}
+
 export default function DayEditorScreen() {
+  const styles = useMemo(createStyles, []);
+
   const { routineDayId, dayName } = useLocalSearchParams<{
     routineDayId: string;
     dayName: string;
@@ -287,148 +439,3 @@ export default function DayEditorScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  headerTitle: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semibold,
-  },
-  doneBtn: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-  },
-  doneBtnPressed: { opacity: 0.85 },
-  doneBtnText: {
-    color: Colors.background,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.bold,
-  },
-  scrollContent: {
-    padding: Spacing.md,
-    paddingBottom: 100,
-    gap: Spacing.xs,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingTop: Spacing.xxxl,
-    gap: Spacing.sm,
-  },
-  emptyText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semibold,
-  },
-  emptyHint: { color: Colors.textTertiary, fontSize: Typography.size.sm },
-  exRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  exInfo: { flex: 1, gap: 2 },
-  exName: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  exMeta: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  reorderBtns: { flexDirection: 'column', gap: 2 },
-  reorderBtn: { padding: 2 },
-  reorderBtnPressed: { opacity: 0.6 },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-    backgroundColor: Colors.background,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  addExBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-  },
-  addExBtnPressed: { opacity: 0.85 },
-  addExText: {
-    color: Colors.background,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-  configBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  configSheet: {
-    backgroundColor: Colors.surfaceElevated,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    padding: Spacing.xl,
-    gap: Spacing.lg,
-    borderTopWidth: 1,
-    borderColor: Colors.border,
-  },
-  configTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  configRow: { flexDirection: 'row', gap: Spacing.md },
-  configField: { flex: 1, gap: Spacing.xs },
-  configLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  configInput: {
-    backgroundColor: Colors.surface,
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semibold,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    textAlign: 'center',
-  },
-  confirmBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-  },
-  confirmBtnPressed: { opacity: 0.85 },
-  confirmBtnText: {
-    color: Colors.background,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-});

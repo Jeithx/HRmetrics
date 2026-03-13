@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AppState,
   AppStateStatus,
@@ -63,6 +63,7 @@ const SetRow = memo(function SetRow({
   onToggle,
   onDelete,
 }: SetRowProps) {
+  const styles = useMemo(createStyles, []);
   const updateSet = useWorkoutStore((s) => s.updateSet);
   const reduceMotion = useReducedMotion();
 
@@ -167,6 +168,7 @@ const ExerciseBlock = memo(function ExerciseBlock({
   isActive,
   onSetCompleted,
 }: ExerciseBlockProps) {
+  const styles = useMemo(createStyles, []);
   const { toggleSetComplete, addSet, removeSet, removeExercise } = useWorkoutStore();
   const [lastPerf, setLastPerf] = useState<LastPerformanceSet[]>([]);
   const [muscleGroup, setMuscleGroup] = useState<string | null>(null);
@@ -321,6 +323,7 @@ interface DiscardSheetProps {
 }
 
 function DiscardSheet({ visible, completedSets, onKeep, onDiscard }: DiscardSheetProps) {
+  const styles = useMemo(createStyles, []);
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onKeep}>
       <Pressable style={styles.sheetBackdrop} onPress={onKeep} />
@@ -354,6 +357,7 @@ function DiscardSheet({ visible, completedSets, onKeep, onDiscard }: DiscardShee
 // ─── Active Workout Screen ─────────────────────────────────────────────────
 
 export default function ActiveWorkoutScreen() {
+  const styles = useMemo(createStyles, []);
   const { activeWorkout, elapsedSeconds, workoutStartTime, finishWorkout, discardWorkout, summaryData, reorderExercises } =
     useWorkoutStore();
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -387,7 +391,9 @@ export default function ActiveWorkoutScreen() {
 
       if (prev === 'active' && nextState !== 'active') {
         const startTs = workoutStartTime ?? Date.now();
-        showWorkoutActiveNotification(startTs).catch(() => { });
+        if (getSetting('workout_active_notification_enabled') !== '0') {
+          showWorkoutActiveNotification(startTs).catch(() => { });
+        }
       } else if (prev !== 'active' && nextState === 'active') {
         dismissWorkoutActiveNotification().catch(() => { });
       }
@@ -524,7 +530,8 @@ export default function ActiveWorkoutScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles() {
+  return StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -849,4 +856,5 @@ const styles = StyleSheet.create({
     fontSize: Typography.size.md,
     fontWeight: Typography.weight.semibold,
   },
-});
+  });
+}

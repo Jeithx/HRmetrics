@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   Alert,
   Animated,
@@ -72,6 +72,7 @@ interface ProgressRingProps {
 }
 
 function ProgressRing({ todayTotal, dailyGoalMl, waterUnit, goalJustReached }: ProgressRingProps) {
+  const styles = useMemo(createStyles, []);
   const ringProgress = useSharedValue(0);
   const percentScale = useSharedValue(1);
   const prevGoalReached = useRef(false);
@@ -145,6 +146,7 @@ function WaterBarChart({
   goalMl: number;
   waterUnit: WaterUnit;
 }) {
+  const styles = useMemo(createStyles, []);
   const [chartData, setChartData] = useState<WaterDaySummary[]>([]);
 
   useFocusEffect(
@@ -244,6 +246,7 @@ interface EntryRowProps {
 }
 
 function SwipeableEntryRow({ amountMl, recordedAt, notes, waterUnit, onDelete }: EntryRowProps) {
+  const styles = useMemo(createStyles, []);
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpen = useRef(false);
 
@@ -312,6 +315,7 @@ function WaterStatsStrip({
   waterUnit: WaterUnit;
   goalMl: number;
 }) {
+  const styles = useMemo(createStyles, []);
   const stats = useWaterStore((s) => s.stats);
 
   const cards = [
@@ -338,7 +342,284 @@ function WaterStatsStrip({
 
 // ─── Water Screen ─────────────────────────────────────────────────────────────
 
+function createStyles() {
+  return StyleSheet.create({
+    flex: { flex: 1, backgroundColor: Colors.background },
+    container: { flex: 1, backgroundColor: Colors.background },
+    content: { paddingBottom: Spacing.xxxl },
+  
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xxl,
+      paddingBottom: Spacing.md,
+      backgroundColor: Colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    backBtn: { padding: 4 },
+    headerTitle: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+    },
+    headerRight: {},
+    goalLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+  
+    // Progress Ring
+    ringWrapper: {
+      alignItems: 'center',
+      paddingVertical: Spacing.xl,
+      gap: Spacing.sm,
+    },
+    ringContainer: {
+      width: RING_SIZE,
+      height: RING_SIZE,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ringCenter: {
+      position: 'absolute',
+      alignItems: 'center',
+      gap: 2,
+    },
+    ringPercent: {
+      color: Colors.text,
+      fontSize: Typography.size.xxxl,
+      fontWeight: Typography.weight.bold,
+    },
+    ringPercentGoal: {
+      color: Colors.success,
+    },
+    ringTotal: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    ringStatus: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    ringStatusGoal: {
+      color: Colors.success,
+      fontWeight: Typography.weight.semibold,
+    },
+  
+    // Section
+    section: {
+      paddingHorizontal: Spacing.lg,
+      gap: Spacing.sm,
+      marginTop: Spacing.lg,
+    },
+    sectionLabel: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+  
+    // Quick Add
+    quickAddRow: { flexDirection: 'row' },
+    quickBtn: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.full,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderWidth: 1,
+      borderColor: WATER_COLOR,
+      marginRight: Spacing.sm,
+    },
+    quickBtnPressed: { opacity: 0.7, backgroundColor: Colors.surfaceElevated },
+    quickBtnText: {
+      color: WATER_COLOR,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+  
+    // Custom Add
+    customCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      padding: Spacing.md,
+      gap: Spacing.sm,
+    },
+    customInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    customInput: {
+      flex: 1,
+      backgroundColor: Colors.surfaceElevated,
+      color: Colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.semibold,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      textAlign: 'center',
+    },
+    customUnit: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+      width: 28,
+    },
+    addBtn: {
+      backgroundColor: WATER_COLOR,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addBtnDisabled: { backgroundColor: Colors.surfaceElevated },
+    addBtnPressed: { opacity: 0.8 },
+    addBtnText: {
+      color: Colors.background,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    notesInput: {
+      backgroundColor: Colors.surfaceElevated,
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+  
+    // Today's log
+    emptyLog: {
+      alignItems: 'center',
+      paddingVertical: Spacing.xl,
+      gap: Spacing.sm,
+    },
+    emptyLogText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    emptyLogSub: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+    },
+    logList: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      overflow: 'hidden',
+    },
+  
+    // Swipeable entry
+    entrySwipeWrapper: { overflow: 'hidden' },
+    entryDeleteZone: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      right: 0,
+      width: DELETE_W,
+      backgroundColor: Colors.error,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    entryDeleteBtn: { alignItems: 'center', padding: Spacing.sm },
+    entryRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      gap: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    entryAmountBadge: {
+      backgroundColor: `${WATER_COLOR}20`,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      borderWidth: 1,
+      borderColor: `${WATER_COLOR}40`,
+    },
+    entryAmountText: {
+      color: WATER_COLOR,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.bold,
+    },
+    entryMeta: { flex: 1, gap: 2 },
+    entryTime: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.medium,
+    },
+    entryNotes: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+    },
+  
+    // Chart
+    chartCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      padding: Spacing.md,
+      gap: Spacing.sm,
+    },
+    chartTitle: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+  
+    // Stats
+    statsStrip: { flexDirection: 'row' },
+    statCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      marginRight: Spacing.sm,
+      alignItems: 'center',
+      gap: 4,
+      minWidth: 90,
+    },
+    statLabel: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    statValue: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+  });
+}
+
 export default function WaterScreen() {
+  const styles = useMemo(createStyles, []);
+
   const {
     todayEntries,
     todayTotal,
@@ -518,275 +799,3 @@ export default function WaterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Colors.background },
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: { paddingBottom: Spacing.xxxl },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  backBtn: { padding: 4 },
-  headerTitle: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-  },
-  headerRight: {},
-  goalLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-
-  // Progress Ring
-  ringWrapper: {
-    alignItems: 'center',
-    paddingVertical: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  ringContainer: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ringCenter: {
-    position: 'absolute',
-    alignItems: 'center',
-    gap: 2,
-  },
-  ringPercent: {
-    color: Colors.text,
-    fontSize: Typography.size.xxxl,
-    fontWeight: Typography.weight.bold,
-  },
-  ringPercentGoal: {
-    color: Colors.success,
-  },
-  ringTotal: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  ringStatus: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  ringStatusGoal: {
-    color: Colors.success,
-    fontWeight: Typography.weight.semibold,
-  },
-
-  // Section
-  section: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.sm,
-    marginTop: Spacing.lg,
-  },
-  sectionLabel: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-
-  // Quick Add
-  quickAddRow: { flexDirection: 'row' },
-  quickBtn: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: WATER_COLOR,
-    marginRight: Spacing.sm,
-  },
-  quickBtnPressed: { opacity: 0.7, backgroundColor: Colors.surfaceElevated },
-  quickBtnText: {
-    color: WATER_COLOR,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-
-  // Custom Add
-  customCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  customInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  customInput: {
-    flex: 1,
-    backgroundColor: Colors.surfaceElevated,
-    color: Colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.semibold,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    textAlign: 'center',
-  },
-  customUnit: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.medium,
-    width: 28,
-  },
-  addBtn: {
-    backgroundColor: WATER_COLOR,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addBtnDisabled: { backgroundColor: Colors.surfaceElevated },
-  addBtnPressed: { opacity: 0.8 },
-  addBtnText: {
-    color: Colors.background,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-  notesInput: {
-    backgroundColor: Colors.surfaceElevated,
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-
-  // Today's log
-  emptyLog: {
-    alignItems: 'center',
-    paddingVertical: Spacing.xl,
-    gap: Spacing.sm,
-  },
-  emptyLogText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  emptyLogSub: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-  },
-  logList: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-
-  // Swipeable entry
-  entrySwipeWrapper: { overflow: 'hidden' },
-  entryDeleteZone: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    right: 0,
-    width: DELETE_W,
-    backgroundColor: Colors.error,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  entryDeleteBtn: { alignItems: 'center', padding: Spacing.sm },
-  entryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    gap: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  entryAmountBadge: {
-    backgroundColor: `${WATER_COLOR}20`,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: `${WATER_COLOR}40`,
-  },
-  entryAmountText: {
-    color: WATER_COLOR,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.bold,
-  },
-  entryMeta: { flex: 1, gap: 2 },
-  entryTime: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-  entryNotes: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-  },
-
-  // Chart
-  chartCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  chartTitle: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-
-  // Stats
-  statsStrip: { flexDirection: 'row' },
-  statCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    marginRight: Spacing.sm,
-    alignItems: 'center',
-    gap: 4,
-    minWidth: 90,
-  },
-  statLabel: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  statValue: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-});

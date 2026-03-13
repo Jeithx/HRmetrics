@@ -117,139 +117,6 @@ function Sparkline({ entries, unit }: SparklineProps) {
   );
 }
 
-// ─── Swap Day Modal ────────────────────────────────────────────────────────
-
-interface SwapDayModalProps {
-  visible: boolean;
-  days: RoutineDayWithExercises[];
-  onSelect: (day: RoutineDayWithExercises) => void;
-  onClose: () => void;
-}
-
-function SwapDayModal({ visible, days, onSelect, onClose }: SwapDayModalProps) {
-  const nonRestDays = days.filter((d) => d.exercises.length > 0);
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.modalBackdrop} onPress={onClose} />
-      <View style={styles.modalSheet}>
-        <Text style={styles.modalTitle}>Choose a Day</Text>
-        <FlatList
-          data={nonRestDays}
-          keyExtractor={(d) => String(d.id)}
-          renderItem={({ item }) => (
-            <Pressable
-              style={({ pressed }) => [styles.swapRow, pressed && styles.swapRowPressed]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
-                onSelect(item);
-                onClose();
-              }}
-            >
-              <Text style={styles.swapDayName}>{item.name}</Text>
-              <Text style={styles.swapDayMeta}>{item.exercises.length} exercises</Text>
-            </Pressable>
-          )}
-        />
-      </View>
-    </Modal>
-  );
-}
-
-// ─── Today's Workout Card ──────────────────────────────────────────────────
-
-interface TodaysCardProps {
-  onStartWithDay: (routineDayId: number) => void;
-  onStartBlank: () => void;
-}
-
-function TodaysCard({ onStartWithDay, onStartBlank }: TodaysCardProps) {
-  const { routines, activeRoutineId, todaysRoutineDay, loadTodaysDay, skipDay } = useRoutineStore();
-  const [swapVisible, setSwapVisible] = useState(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadTodaysDay();
-    }, [loadTodaysDay])
-  );
-
-  if (!activeRoutineId) {
-    return (
-      <Pressable style={styles.setupCard} onPress={() => router.push('/(tabs)/routines')}>
-        <Ionicons name="calendar-outline" size={20} color={Colors.textSecondary} />
-        <Text style={styles.setupText}>Set up your routine →</Text>
-      </Pressable>
-    );
-  }
-
-  if (!todaysRoutineDay) {
-    return (
-      <Pressable
-        style={({ pressed }) => [styles.startButton, pressed && styles.startButtonPressed]}
-        onPress={onStartBlank}
-      >
-        <Ionicons name="barbell-outline" size={22} color={Colors.background} />
-        <Text style={styles.startButtonText}>Start Workout</Text>
-      </Pressable>
-    );
-  }
-
-  const previewExercises = todaysRoutineDay.exercises.slice(0, 3);
-  const remaining = todaysRoutineDay.exercises.length - previewExercises.length;
-  const activeRoutine = routines.find((r) => r.id === activeRoutineId);
-
-  return (
-    <View style={styles.todaysCard}>
-      <Text style={styles.todayLabel}>Today</Text>
-      <Text style={styles.todayDayName}>{todaysRoutineDay.name}</Text>
-
-      {previewExercises.length > 0 && (
-        <View style={styles.exercisePreview}>
-          {previewExercises.map((ex) => (
-            <Text key={ex.exercise_id} style={styles.previewExercise}>
-              · {ex.exercise_name}
-            </Text>
-          ))}
-          {remaining > 0 && (
-            <Text style={styles.previewMore}>and {remaining} more</Text>
-          )}
-        </View>
-      )}
-
-      <View style={styles.todayActions}>
-        <Pressable
-          style={({ pressed }) => [styles.startTodayBtn, pressed && styles.startTodayBtnPressed]}
-          onPress={() => onStartWithDay(todaysRoutineDay.id)}
-        >
-          <Ionicons name="play" size={16} color={Colors.background} />
-          <Text style={styles.startTodayText}>Start</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryBtn, pressed && styles.secondaryBtnPressed]}
-          onPress={() => setSwapVisible(true)}
-        >
-          <Text style={styles.secondaryBtnText}>Swap Day</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryBtn, pressed && styles.secondaryBtnPressed]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
-            skipDay();
-          }}
-        >
-          <Text style={styles.secondaryBtnText}>Skip</Text>
-        </Pressable>
-      </View>
-
-      <SwapDayModal
-        visible={swapVisible}
-        days={activeRoutine?.days ?? []}
-        onSelect={(day) => onStartWithDay(day.id)}
-        onClose={() => setSwapVisible(false)}
-      />
-    </View>
-  );
-}
-
 // ─── REX helpers ───────────────────────────────────────────────────────────
 
 function getRexGreeting(): string {
@@ -260,31 +127,96 @@ function getRexGreeting(): string {
   return 'Late night? Here\'s a quick recap.';
 }
 
-function RexInsightCard({ insight, onTap }: { insight: Insight; onTap: () => void }) {
-  const accent = CATEGORY_COLOR[insight.category] ?? Colors.primary;
-  return (
-    <Pressable
-      style={[rexStyles.insightCard, { borderLeftColor: accent }]}
-      onPress={onTap}
-    >
-      <View style={rexStyles.insightRow}>
-        <Text style={rexStyles.insightIcon}>{insight.icon}</Text>
-        <View style={rexStyles.insightBody}>
-          <Text style={rexStyles.insightTitle}>{insight.title}</Text>
-          <Text style={rexStyles.insightMessage} numberOfLines={3}>{insight.message}</Text>
-        </View>
-        <Ionicons name="chevron-forward" size={14} color={Colors.textTertiary} />
-      </View>
-    </Pressable>
-  );
-}
-
 interface RexSectionProps {
   onRexTap: () => void;
 }
 
 function RexSection({ onRexTap }: RexSectionProps) {
   const { topInsight, dailyMood, isLoading } = useInsightStore();
+
+  const rexStyles = StyleSheet.create({
+    container: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: 0,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      padding: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    greetingBox: { flex: 1, gap: 2 },
+    rexLabel: {
+      color: Colors.primary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: 1.5,
+    },
+    greeting: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    insightCard: {
+      borderLeftWidth: 3,
+      padding: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    insightRow: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      alignItems: 'flex-start',
+    },
+    insightIcon: { fontSize: 18, marginTop: 1 },
+    insightBody: { flex: 1, gap: 2 },
+    insightTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    insightMessage: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      lineHeight: Typography.size.sm * 1.5,
+    },
+    actionBtn: { marginTop: Spacing.xs },
+    actionBtnText: {
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+    },
+    emptyCard: {
+      padding: Spacing.md,
+    },
+    emptyText: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+    },
+  });
+
+  function RexInsightCard({ insight, onTap }: { insight: Insight; onTap: () => void }) {
+    const accent = CATEGORY_COLOR[insight.category] ?? Colors.primary;
+    return (
+      <Pressable
+        style={[rexStyles.insightCard, { borderLeftColor: accent }]}
+        onPress={onTap}
+      >
+        <View style={rexStyles.insightRow}>
+          <Text style={rexStyles.insightIcon}>{insight.icon}</Text>
+          <View style={rexStyles.insightBody}>
+            <Text style={rexStyles.insightTitle}>{insight.title}</Text>
+            <Text style={rexStyles.insightMessage} numberOfLines={3}>{insight.message}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={14} color={Colors.textTertiary} />
+        </View>
+      </Pressable>
+    );
+  }
 
   const mood = dailyMood;
   const greeting = getRexGreeting();
@@ -316,6 +248,438 @@ function RexSection({ onRexTap }: RexSectionProps) {
 // ─── Home Screen ───────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: Colors.background },
+    content: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xxxl,
+      paddingBottom: Spacing.xxxl,
+      gap: Spacing.xl,
+    },
+    pageTitle: {
+      color: Colors.primary,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: -0.5,
+    },
+    startButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.lg,
+    },
+    startButtonPressed: { opacity: 0.85 },
+    startButtonText: {
+      color: Colors.background,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    setupCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    setupText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.md,
+    },
+    todaysCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    todayLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    todayDayName: {
+      color: Colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+    },
+    exercisePreview: {
+      gap: 2,
+      paddingBottom: Spacing.xs,
+    },
+    previewExercise: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    previewMore: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      marginTop: 2,
+    },
+    todayActions: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      marginTop: Spacing.xs,
+    },
+    startTodayBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+      backgroundColor: Colors.primary,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.md,
+    },
+    startTodayBtnPressed: { opacity: 0.85 },
+    startTodayText: {
+      color: Colors.background,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.bold,
+    },
+    secondaryBtn: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    secondaryBtnPressed: { backgroundColor: Colors.surfaceElevated },
+    secondaryBtnText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.medium,
+    },
+    resumeCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      borderWidth: 1,
+      borderColor: Colors.primary,
+      gap: Spacing.xs,
+    },
+    cardPressed: { opacity: 0.85 },
+    resumeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+    liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary },
+    resumeLabel: {
+      color: Colors.primary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    resumeTime: {
+      color: Colors.text,
+      fontSize: Typography.size.xxxl,
+      fontWeight: Typography.weight.bold,
+      fontVariant: ['tabular-nums'],
+    },
+    resumeSub: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+    section: { gap: Spacing.sm },
+    sectionTitle: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    lastWorkoutCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    lastWorkoutDate: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+    },
+    lastWorkoutDuration: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+    modalBackdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalSheet: {
+      backgroundColor: Colors.surface,
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      padding: Spacing.lg,
+      maxHeight: '60%',
+      borderTopWidth: 1,
+      borderColor: Colors.border,
+    },
+    modalTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+      marginBottom: Spacing.md,
+    },
+    swapRow: {
+      paddingVertical: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    swapRowPressed: { backgroundColor: Colors.surfaceElevated },
+    swapDayName: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    swapDayMeta: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+    statsStrip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.sm,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    statsStripPressed: { opacity: 0.8 },
+    statsStripText: {
+      flex: 1,
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    bwCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    bwHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    bwValue: {
+      color: Colors.text,
+      fontSize: Typography.size.xxxl,
+      fontWeight: Typography.weight.bold,
+    },
+    phaseBadge: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderRadius: BorderRadius.sm,
+      borderWidth: 1,
+    },
+    phaseBadgeText: {
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: 0.5,
+    },
+    bwFooter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: Spacing.xs,
+    },
+    bwLogLink: {
+      flex: 1,
+      color: Colors.primary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    waterCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    waterHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    waterTitle: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    waterGoal: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    waterBar: {
+      height: 6,
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.full,
+      overflow: 'hidden',
+    },
+    waterBarFill: {
+      height: 6,
+      backgroundColor: WATER_COLOR,
+      borderRadius: BorderRadius.full,
+    },
+    waterQuickRow: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+      marginTop: Spacing.xs,
+    },
+    waterQuickBtn: {
+      backgroundColor: `${WATER_COLOR}20`,
+      borderRadius: BorderRadius.full,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderWidth: 1,
+      borderColor: `${WATER_COLOR}40`,
+    },
+    waterQuickBtnText: {
+      color: WATER_COLOR,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+  });
+
+  // ─── Swap Day Modal ────────────────────────────────────────────────────────
+
+  interface SwapDayModalProps {
+    visible: boolean;
+    days: RoutineDayWithExercises[];
+    onSelect: (day: RoutineDayWithExercises) => void;
+    onClose: () => void;
+  }
+
+  function SwapDayModal({ visible, days, onSelect, onClose }: SwapDayModalProps) {
+    const nonRestDays = days.filter((d) => d.exercises.length > 0);
+    return (
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <Pressable style={styles.modalBackdrop} onPress={onClose} />
+        <View style={styles.modalSheet}>
+          <Text style={styles.modalTitle}>Choose a Day</Text>
+          <FlatList
+            data={nonRestDays}
+            keyExtractor={(d) => String(d.id)}
+            renderItem={({ item }) => (
+              <Pressable
+                style={({ pressed }) => [styles.swapRow, pressed && styles.swapRowPressed]}
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
+                  onSelect(item);
+                  onClose();
+                }}
+              >
+                <Text style={styles.swapDayName}>{item.name}</Text>
+                <Text style={styles.swapDayMeta}>{item.exercises.length} exercises</Text>
+              </Pressable>
+            )}
+          />
+        </View>
+      </Modal>
+    );
+  }
+
+  // ─── Today's Workout Card ──────────────────────────────────────────────────
+
+  interface TodaysCardProps {
+    onStartWithDay: (routineDayId: number) => void;
+    onStartBlank: () => void;
+  }
+
+  function TodaysCard({ onStartWithDay, onStartBlank }: TodaysCardProps) {
+    const { routines, activeRoutineId, todaysRoutineDay, loadTodaysDay, skipDay } = useRoutineStore();
+    const [swapVisible, setSwapVisible] = useState(false);
+
+    useFocusEffect(
+      useCallback(() => {
+        loadTodaysDay();
+      }, [loadTodaysDay])
+    );
+
+    if (!activeRoutineId) {
+      return (
+        <Pressable style={styles.setupCard} onPress={() => router.push('/(tabs)/routines')}>
+          <Ionicons name="calendar-outline" size={20} color={Colors.textSecondary} />
+          <Text style={styles.setupText}>Set up your routine →</Text>
+        </Pressable>
+      );
+    }
+
+    if (!todaysRoutineDay) {
+      return (
+        <Pressable
+          style={({ pressed }) => [styles.startButton, pressed && styles.startButtonPressed]}
+          onPress={onStartBlank}
+        >
+          <Ionicons name="barbell-outline" size={22} color={Colors.background} />
+          <Text style={styles.startButtonText}>Start Workout</Text>
+        </Pressable>
+      );
+    }
+
+    const previewExercises = todaysRoutineDay.exercises.slice(0, 3);
+    const remaining = todaysRoutineDay.exercises.length - previewExercises.length;
+    const activeRoutine = routines.find((r) => r.id === activeRoutineId);
+
+    return (
+      <View style={styles.todaysCard}>
+        <Text style={styles.todayLabel}>Today</Text>
+        <Text style={styles.todayDayName}>{todaysRoutineDay.name}</Text>
+
+        {previewExercises.length > 0 && (
+          <View style={styles.exercisePreview}>
+            {previewExercises.map((ex) => (
+              <Text key={ex.exercise_id} style={styles.previewExercise}>
+                · {ex.exercise_name}
+              </Text>
+            ))}
+            {remaining > 0 && (
+              <Text style={styles.previewMore}>and {remaining} more</Text>
+            )}
+          </View>
+        )}
+
+        <View style={styles.todayActions}>
+          <Pressable
+            style={({ pressed }) => [styles.startTodayBtn, pressed && styles.startTodayBtnPressed]}
+            onPress={() => onStartWithDay(todaysRoutineDay.id)}
+          >
+            <Ionicons name="play" size={16} color={Colors.background} />
+            <Text style={styles.startTodayText}>Start</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.secondaryBtn, pressed && styles.secondaryBtnPressed]}
+            onPress={() => setSwapVisible(true)}
+          >
+            <Text style={styles.secondaryBtnText}>Swap Day</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.secondaryBtn, pressed && styles.secondaryBtnPressed]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => { });
+              skipDay();
+            }}
+          >
+            <Text style={styles.secondaryBtnText}>Skip</Text>
+          </Pressable>
+        </View>
+
+        <SwapDayModal
+          visible={swapVisible}
+          days={activeRoutine?.days ?? []}
+          onSelect={(day) => onStartWithDay(day.id)}
+          onClose={() => setSwapVisible(false)}
+        />
+      </View>
+    );
+  }
+
   const { activeWorkout, elapsedSeconds, startWorkout } = useWorkoutStore();
   const {
     entries: bwEntries,
@@ -500,367 +864,3 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxxl,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.xl,
-  },
-  pageTitle: {
-    color: Colors.primary,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: -0.5,
-  },
-  startButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.lg,
-  },
-  startButtonPressed: { opacity: 0.85 },
-  startButtonText: {
-    color: Colors.background,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  setupCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  setupText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.md,
-  },
-  todaysCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  todayLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  todayDayName: {
-    color: Colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-  },
-  exercisePreview: {
-    gap: 2,
-    paddingBottom: Spacing.xs,
-  },
-  previewExercise: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  previewMore: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    marginTop: 2,
-  },
-  todayActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  startTodayBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-  },
-  startTodayBtnPressed: { opacity: 0.85 },
-  startTodayText: {
-    color: Colors.background,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.bold,
-  },
-  secondaryBtn: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  secondaryBtnPressed: { backgroundColor: Colors.surfaceElevated },
-  secondaryBtnText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-  resumeCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    gap: Spacing.xs,
-  },
-  cardPressed: { opacity: 0.85 },
-  resumeRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary },
-  resumeLabel: {
-    color: Colors.primary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  resumeTime: {
-    color: Colors.text,
-    fontSize: Typography.size.xxxl,
-    fontWeight: Typography.weight.bold,
-    fontVariant: ['tabular-nums'],
-  },
-  resumeSub: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  section: { gap: Spacing.sm },
-  sectionTitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  lastWorkoutCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  lastWorkoutDate: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.medium,
-  },
-  lastWorkoutDuration: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalSheet: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    maxHeight: '60%',
-    borderTopWidth: 1,
-    borderColor: Colors.border,
-  },
-  modalTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    marginBottom: Spacing.md,
-  },
-  swapRow: {
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  swapRowPressed: { backgroundColor: Colors.surfaceElevated },
-  swapDayName: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  swapDayMeta: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  statsStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  statsStripPressed: { opacity: 0.8 },
-  statsStripText: {
-    flex: 1,
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  bwCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  bwHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  bwValue: {
-    color: Colors.text,
-    fontSize: Typography.size.xxxl,
-    fontWeight: Typography.weight.bold,
-  },
-  phaseBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-  },
-  phaseBadgeText: {
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 0.5,
-  },
-  bwFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.xs,
-  },
-  bwLogLink: {
-    flex: 1,
-    color: Colors.primary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  waterCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  waterHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  waterTitle: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  waterGoal: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  waterBar: {
-    height: 6,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.full,
-    overflow: 'hidden',
-  },
-  waterBarFill: {
-    height: 6,
-    backgroundColor: WATER_COLOR,
-    borderRadius: BorderRadius.full,
-  },
-  waterQuickRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  waterQuickBtn: {
-    backgroundColor: `${WATER_COLOR}20`,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderWidth: 1,
-    borderColor: `${WATER_COLOR}40`,
-  },
-  waterQuickBtnText: {
-    color: WATER_COLOR,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-});
-
-const rexStyles = StyleSheet.create({
-  container: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: 0,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  greetingBox: { flex: 1, gap: 2 },
-  rexLabel: {
-    color: Colors.primary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 1.5,
-  },
-  greeting: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  insightCard: {
-    borderLeftWidth: 3,
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  insightRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    alignItems: 'flex-start',
-  },
-  insightIcon: { fontSize: 18, marginTop: 1 },
-  insightBody: { flex: 1, gap: 2 },
-  insightTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  insightMessage: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    lineHeight: Typography.size.sm * 1.5,
-  },
-  actionBtn: { marginTop: Spacing.xs },
-  actionBtnText: {
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-  },
-  emptyCard: {
-    padding: Spacing.md,
-  },
-  emptyText: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-  },
-});

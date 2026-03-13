@@ -162,6 +162,7 @@ function seedSettingsIfEmptySync(database: SQLite.SQLiteDatabase): void {
     { key: 'workout_reminder_enabled', value: '' },
     { key: 'water_reminder_enabled', value: '' },
     { key: 'weight_reminder_enabled', value: '' },
+    { key: 'workout_active_notification_enabled', value: '1' },
     { key: 'first_launch_date', value: new Date().toISOString() },
     { key: 'support_prompt_count', value: '0' },
     { key: 'support_prompt_last_shown', value: '' },

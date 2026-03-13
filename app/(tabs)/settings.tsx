@@ -35,68 +35,231 @@ type WaterUnit = 'ml' | 'oz';
 const REST_OPTIONS: RestOption[] = ['60', '90', '120', '180', 'off'];
 const REST_LABELS: Record<RestOption, string> = { '60': '60s', '90': '90s', '120': '2m', '180': '3m', off: 'Off' };
 
-function SectionHeader({ title }: { title: string }) {
-  return <Text style={styles.sectionHeader}>{title}</Text>;
-}
-
-function PillGroup<T extends string>({
-  options,
-  value,
-  labels,
-  onChange,
-}: {
-  options: T[];
-  value: T;
-  labels: Record<T, string>;
-  onChange: (v: T) => void;
-}) {
-  return (
-    <View style={styles.pillGroup}>
-      {options.map((opt) => (
-        <Pressable
-          key={opt}
-          style={({ pressed }) => [
-            styles.pill,
-            value === opt && styles.pillActive,
-            pressed && styles.pillPressed,
-          ]}
-          onPress={() => onChange(opt)}
-        >
-          <Text style={[styles.pillText, value === opt && styles.pillTextActive]}>
-            {labels[opt]}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-function DataRow({
-  label,
-  icon,
-  onPress,
-  destructive,
-}: {
-  label: string;
-  icon: string;
-  onPress: () => void;
-  destructive?: boolean;
-}) {
-  return (
-    <Pressable
-      style={({ pressed }) => [styles.dataRow, pressed && styles.dataRowPressed]}
-      onPress={onPress}
-    >
-      <Text style={styles.dataRowIcon}>{icon}</Text>
-      <Text style={[styles.dataRowLabel, destructive && styles.dataRowDestructive]}>
-        {label}
-      </Text>
-      <Text style={styles.chevron}>›</Text>
-    </Pressable>
-  );
-}
-
 export default function SettingsScreen() {
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: Colors.background },
+    content: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xxxl,
+      paddingBottom: Spacing.xxxl,
+      gap: Spacing.sm,
+    },
+    pageTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: -0.5,
+      marginBottom: Spacing.md,
+    },
+    sectionHeader: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginTop: Spacing.lg,
+      marginBottom: Spacing.xs,
+    },
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      overflow: 'hidden',
+    },
+    settingsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      minHeight: 52,
+      gap: Spacing.md,
+    },
+    rowLabel: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+    },
+    rowValue: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.md,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: Colors.border,
+      marginHorizontal: Spacing.lg,
+    },
+    pillGroup: {
+      flexDirection: 'row',
+      gap: Spacing.xs,
+    },
+    pill: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      backgroundColor: Colors.surfaceElevated,
+    },
+    pillActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+    pillPressed: { opacity: 0.8 },
+    pillText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    pillTextActive: { color: Colors.background },
+    dataRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      minHeight: 52,
+      gap: Spacing.md,
+    },
+    dataRowPressed: { backgroundColor: Colors.surfaceElevated },
+    dataRowIcon: { fontSize: 18, width: 26, textAlign: 'center' },
+    dataRowLabel: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+    },
+    dataRowDestructive: { color: Colors.error },
+    chevron: { color: Colors.textTertiary, fontSize: 20, lineHeight: 22 },
+    taglineRow: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+    },
+    tagline: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+      fontStyle: 'italic',
+    },
+    waterGoalRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    waterGoalInput: {
+      backgroundColor: Colors.surfaceElevated,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      minWidth: 64,
+      textAlign: 'center',
+    },
+    waterGoalUnit: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    supporterCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      marginBottom: Spacing.sm,
+    },
+    supporterCardLeft: { gap: Spacing.xs },
+    supporterCardThank: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+    },
+    supportDevRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      marginBottom: Spacing.sm,
+    },
+    supportDevIcon: { fontSize: 16 },
+    supportDevText: {
+      flex: 1,
+      color: Colors.primary,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+  });
+
+  function SectionHeader({ title }: { title: string }) {
+    return <Text style={styles.sectionHeader}>{title}</Text>;
+  }
+
+  function PillGroup<T extends string>({
+    options,
+    value,
+    labels,
+    onChange,
+  }: {
+    options: T[];
+    value: T;
+    labels: Record<T, string>;
+    onChange: (v: T) => void;
+  }) {
+    return (
+      <View style={styles.pillGroup}>
+        {options.map((opt) => (
+          <Pressable
+            key={opt}
+            style={({ pressed }) => [
+              styles.pill,
+              value === opt && styles.pillActive,
+              pressed && styles.pillPressed,
+            ]}
+            onPress={() => onChange(opt)}
+          >
+            <Text style={[styles.pillText, value === opt && styles.pillTextActive]}>
+              {labels[opt]}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+    );
+  }
+
+  function DataRow({
+    label,
+    icon,
+    onPress,
+    destructive,
+  }: {
+    label: string;
+    icon: string;
+    onPress: () => void;
+    destructive?: boolean;
+  }) {
+    return (
+      <Pressable
+        style={({ pressed }) => [styles.dataRow, pressed && styles.dataRowPressed]}
+        onPress={onPress}
+      >
+        <Text style={styles.dataRowIcon}>{icon}</Text>
+        <Text style={[styles.dataRowLabel, destructive && styles.dataRowDestructive]}>
+          {label}
+        </Text>
+        <Text style={styles.chevron}>›</Text>
+      </Pressable>
+    );
+  }
+
   const [unit, setUnit] = useState<WeightUnit>('kg');
   const [restTimer, setRestTimer] = useState<RestOption>('90');
   const [exporting, setExporting] = useState(false);
@@ -364,6 +527,12 @@ export default function SettingsScreen() {
       {/* ── About ───────────────────────────────── */}
       <SectionHeader title="ABOUT" />
       <View style={styles.card}>
+        <DataRow
+          label="Restore Purchases"
+          icon="🔄"
+          onPress={handleRestorePurchases}
+        />
+        <View style={styles.divider} />
         <View style={styles.settingsRow}>
           <Text style={styles.rowLabel}>App Version</Text>
           <Text style={styles.rowValue}>1.0.0</Text>
@@ -374,182 +543,8 @@ export default function SettingsScreen() {
             Built by a CS student, one commit at a time.
           </Text>
         </View>
-        <View style={styles.divider} />
-        <DataRow
-          label="Support Development →"
-          icon="⚡"
-          onPress={() => router.push('/settings/supporter')}
-        />
-        <View style={styles.divider} />
-        <DataRow
-          label="Restore Purchases"
-          icon="🔄"
-          onPress={handleRestorePurchases}
-        />
       </View>
     </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxxl,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.sm,
-  },
-  pageTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: -0.5,
-    marginBottom: Spacing.md,
-  },
-  sectionHeader: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xs,
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  settingsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    minHeight: 52,
-    gap: Spacing.md,
-  },
-  rowLabel: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.medium,
-  },
-  rowValue: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.md,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginHorizontal: Spacing.lg,
-  },
-  pillGroup: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-  },
-  pill: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surfaceElevated,
-  },
-  pillActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  pillPressed: { opacity: 0.8 },
-  pillText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  pillTextActive: { color: Colors.background },
-  dataRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    minHeight: 52,
-    gap: Spacing.md,
-  },
-  dataRowPressed: { backgroundColor: Colors.surfaceElevated },
-  dataRowIcon: { fontSize: 18, width: 26, textAlign: 'center' },
-  dataRowLabel: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.medium,
-  },
-  dataRowDestructive: { color: Colors.error },
-  chevron: { color: Colors.textTertiary, fontSize: 20, lineHeight: 22 },
-  taglineRow: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-  },
-  tagline: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  waterGoalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  waterGoalInput: {
-    backgroundColor: Colors.surfaceElevated,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    minWidth: 64,
-    textAlign: 'center',
-  },
-  waterGoalUnit: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  supporterCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  supporterCardLeft: { gap: Spacing.xs },
-  supporterCardThank: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-  },
-  supportDevRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  supportDevIcon: { fontSize: 16 },
-  supportDevText: {
-    flex: 1,
-    color: Colors.primary,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-});

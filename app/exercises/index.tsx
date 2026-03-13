@@ -39,6 +39,7 @@ interface CustomRowProps {
 }
 
 function SwipeableCustomRow({ exercise, onEdit, onDelete }: CustomRowProps) {
+  const styles = useMemo(createStyles, []);
   const translateX = useRef(new Animated.Value(0)).current;
   const isOpen = useRef(false);
 
@@ -105,6 +106,7 @@ function SwipeableCustomRow({ exercise, onEdit, onDelete }: CustomRowProps) {
 // ─── Default Exercise Row ───────────────────────────────────────────────────
 
 function DefaultRow({ exercise }: { exercise: Exercise }) {
+  const styles = useMemo(createStyles, []);
   return (
     <View style={styles.exerciseRow}>
       <Text style={styles.exerciseName} numberOfLines={1}>{exercise.name}</Text>
@@ -114,7 +116,126 @@ function DefaultRow({ exercise }: { exercise: Exercise }) {
 
 // ─── Main Screen ────────────────────────────────────────────────────────────
 
+function createStyles() {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: Colors.background },
+  
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingTop: Spacing.xxl,
+      paddingBottom: Spacing.md,
+      backgroundColor: Colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    backBtn: { padding: Spacing.xs },
+    headerTitle: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+      marginLeft: Spacing.xs,
+    },
+    addBtn: { padding: Spacing.xs },
+  
+    searchContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      margin: Spacing.lg,
+      paddingHorizontal: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    searchIcon: { marginRight: Spacing.sm },
+    searchInput: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      paddingVertical: Spacing.md,
+    },
+  
+    listContent: { paddingBottom: Spacing.xxxl },
+  
+    groupHeader: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.xs,
+      backgroundColor: Colors.background,
+    },
+  
+    // Swipe wrapper
+    swipeWrapper: { overflow: 'hidden' },
+    deleteZone: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      right: 0,
+      width: DELETE_WIDTH,
+      backgroundColor: Colors.error,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    deleteAction: { alignItems: 'center', gap: 2 },
+    deleteActionText: {
+      color: Colors.text,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+    },
+  
+    // Row
+    exerciseRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      minHeight: 52,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    rowLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      flexShrink: 1,
+    },
+    exerciseName: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.medium,
+      flexShrink: 1,
+    },
+    customBadge: {
+      backgroundColor: Colors.primaryMuted,
+      borderRadius: BorderRadius.sm,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+    },
+    customBadgeText: {
+      color: Colors.primary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+    },
+    editIcon: { padding: Spacing.xs },
+  
+    empty: { alignItems: 'center', paddingTop: Spacing.xxxl },
+    emptyText: { color: Colors.textTertiary, fontSize: Typography.size.md },
+  });
+}
+
 export default function ExercisesScreen() {
+  const styles = useMemo(createStyles, []);
+
   const { exercises, loadExercises, deleteExercise } = useExerciseStore();
   const [query, setQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
@@ -267,117 +388,3 @@ export default function ExercisesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  backBtn: { padding: Spacing.xs },
-  headerTitle: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-    marginLeft: Spacing.xs,
-  },
-  addBtn: { padding: Spacing.xs },
-
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    margin: Spacing.lg,
-    paddingHorizontal: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  searchIcon: { marginRight: Spacing.sm },
-  searchInput: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    paddingVertical: Spacing.md,
-  },
-
-  listContent: { paddingBottom: Spacing.xxxl },
-
-  groupHeader: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.xs,
-    backgroundColor: Colors.background,
-  },
-
-  // Swipe wrapper
-  swipeWrapper: { overflow: 'hidden' },
-  deleteZone: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    right: 0,
-    width: DELETE_WIDTH,
-    backgroundColor: Colors.error,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteAction: { alignItems: 'center', gap: 2 },
-  deleteActionText: {
-    color: Colors.text,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-  },
-
-  // Row
-  exerciseRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    minHeight: 52,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  rowLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    flexShrink: 1,
-  },
-  exerciseName: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.medium,
-    flexShrink: 1,
-  },
-  customBadge: {
-    backgroundColor: Colors.primaryMuted,
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-  },
-  customBadgeText: {
-    color: Colors.primary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-  },
-  editIcon: { padding: Spacing.xs },
-
-  empty: { alignItems: 'center', paddingTop: Spacing.xxxl },
-  emptyText: { color: Colors.textTertiary, fontSize: Typography.size.md },
-});

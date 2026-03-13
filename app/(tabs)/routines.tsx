@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   Alert,
   FlatList,
@@ -21,6 +21,7 @@ interface RoutineCardProps {
 }
 
 function RoutineCard({ routine, isActive, onDelete }: RoutineCardProps) {
+  const styles = useMemo(createStyles, []);
   const exerciseCount = routine.days.reduce((sum, d) => sum + d.exercises.length, 0);
 
   return (
@@ -60,7 +61,124 @@ function RoutineCard({ routine, isActive, onDelete }: RoutineCardProps) {
   );
 }
 
+function createStyles() {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xxxl,
+      paddingBottom: Spacing.md,
+    },
+    title: {
+      color: Colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+    },
+    addButton: {
+      backgroundColor: Colors.primary,
+      width: 36,
+      height: 36,
+      borderRadius: BorderRadius.full,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    addButtonPressed: {
+      opacity: 0.8,
+    },
+    list: {
+      padding: Spacing.md,
+      gap: Spacing.sm,
+      paddingBottom: Spacing.xxxl,
+    },
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    cardActive: {
+      borderColor: Colors.primary,
+    },
+    cardPressed: {
+      opacity: 0.8,
+    },
+    cardRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    cardInfo: {
+      flex: 1,
+      gap: Spacing.xs,
+    },
+    cardName: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    cardMeta: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    activeBadge: {
+      backgroundColor: Colors.primaryMuted,
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 2,
+      borderRadius: BorderRadius.sm,
+    },
+    activeBadgeText: {
+      color: Colors.primary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+    },
+    empty: {
+      alignItems: 'center',
+      paddingTop: Spacing.xxxl * 2,
+      gap: Spacing.sm,
+      paddingHorizontal: Spacing.xl,
+    },
+    emptyEmoji: {
+      fontSize: 48,
+      marginBottom: Spacing.sm,
+    },
+    emptyTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+    },
+    emptySub: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+    },
+    emptyButton: {
+      marginTop: Spacing.lg,
+      backgroundColor: Colors.primary,
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: Spacing.md,
+      borderRadius: BorderRadius.lg,
+    },
+    emptyButtonPressed: {
+      opacity: 0.85,
+    },
+    emptyButtonText: {
+      color: Colors.background,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+  });
+}
+
 export default function RoutinesScreen() {
+  const styles = useMemo(createStyles, []);
+
   const { routines, activeRoutineId, deleteRoutine, loadRoutines } = useRoutineStore();
   const reducedMotion = useReducedMotion();
 
@@ -122,115 +240,3 @@ export default function RoutinesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxxl,
-    paddingBottom: Spacing.md,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-  },
-  addButton: {
-    backgroundColor: Colors.primary,
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addButtonPressed: {
-    opacity: 0.8,
-  },
-  list: {
-    padding: Spacing.md,
-    gap: Spacing.sm,
-    paddingBottom: Spacing.xxxl,
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  cardActive: {
-    borderColor: Colors.primary,
-  },
-  cardPressed: {
-    opacity: 0.8,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  cardInfo: {
-    flex: 1,
-    gap: Spacing.xs,
-  },
-  cardName: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  cardMeta: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  activeBadge: {
-    backgroundColor: Colors.primaryMuted,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.sm,
-  },
-  activeBadgeText: {
-    color: Colors.primary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-  },
-  empty: {
-    alignItems: 'center',
-    paddingTop: Spacing.xxxl * 2,
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
-  },
-  emptyEmoji: {
-    fontSize: 48,
-    marginBottom: Spacing.sm,
-  },
-  emptyTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-  },
-  emptySub: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-  },
-  emptyButton: {
-    marginTop: Spacing.lg,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-  },
-  emptyButtonPressed: {
-    opacity: 0.85,
-  },
-  emptyButtonText: {
-    color: Colors.background,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-});

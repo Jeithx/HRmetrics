@@ -57,6 +57,19 @@ export default function SkeletonLoader({
 
 // Pre-built skeleton matching a workout history card
 export function SkeletonCard() {
+  const styles = StyleSheet.create({
+    card: {
+      backgroundColor: Colors.surface,
+      marginHorizontal: Spacing.lg,
+      marginVertical: Spacing.xs,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+  });
+
   return (
     <View style={styles.card}>
       <SkeletonLoader height={14} width="50%" />
@@ -66,15 +79,3 @@ export function SkeletonCard() {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: Colors.surface,
-    marginHorizontal: Spacing.lg,
-    marginVertical: Spacing.xs,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-});

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +24,7 @@ interface StatBoxProps {
 }
 
 function StatBox({ label, value }: StatBoxProps) {
+  const styles = useMemo(createStyles, []);
   return (
     <View style={styles.statBox}>
       <Text style={styles.statValue}>{value}</Text>
@@ -38,6 +39,7 @@ interface PRCardProps {
 }
 
 function PRCard({ pr, unit }: PRCardProps) {
+  const styles = useMemo(createStyles, []);
   return (
     <View style={styles.prCard}>
       <View style={styles.prRow}>
@@ -55,7 +57,129 @@ function PRCard({ pr, unit }: PRCardProps) {
   );
 }
 
+function createStyles() {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: Colors.background,
+    },
+    scroll: {
+      padding: Spacing.lg,
+      paddingTop: Spacing.xxxl,
+      gap: Spacing.xl,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+    },
+    title: {
+      color: Colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+    },
+    statsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: Spacing.sm,
+    },
+    statBox: {
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      alignItems: 'center',
+      gap: Spacing.xs,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    statValue: {
+      color: Colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+    },
+    statLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.medium,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    prSection: {
+      gap: Spacing.sm,
+    },
+    prSectionTitle: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    prCard: {
+      backgroundColor: Colors.primaryMuted,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.primary,
+      gap: Spacing.xs,
+    },
+    prRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    prExercise: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    prDetail: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    prEstimated: {
+      color: Colors.primary,
+      fontWeight: Typography.weight.semibold,
+    },
+    noSetsText: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+      marginTop: Spacing.lg,
+    },
+    footer: {
+      padding: Spacing.lg,
+      paddingBottom: Spacing.xxl,
+      borderTopWidth: 1,
+      borderTopColor: Colors.border,
+    },
+    doneButton: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.lg,
+      alignItems: 'center',
+    },
+    doneButtonPressed: {
+      opacity: 0.85,
+    },
+    doneButtonText: {
+      color: Colors.background,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    errorText: {
+      color: Colors.textSecondary,
+      textAlign: 'center',
+      marginTop: Spacing.xxxl,
+      marginBottom: Spacing.lg,
+    },
+  });
+}
+
 export default function SummaryScreen() {
+  const styles = useMemo(createStyles, []);
+
   const { summaryData, clearSummary } = useWorkoutStore();
   const [unit, setUnit] = useState<WeightUnit>('kg');
   const [showOverlay, setShowOverlay] = useState(false);
@@ -137,120 +261,3 @@ export default function SummaryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scroll: {
-    padding: Spacing.lg,
-    paddingTop: Spacing.xxxl,
-    gap: Spacing.xl,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-  },
-  statBox: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    alignItems: 'center',
-    gap: Spacing.xs,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  statValue: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-  },
-  statLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.medium,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  prSection: {
-    gap: Spacing.sm,
-  },
-  prSectionTitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  prCard: {
-    backgroundColor: Colors.primaryMuted,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    gap: Spacing.xs,
-  },
-  prRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  prExercise: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-  prDetail: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  prEstimated: {
-    color: Colors.primary,
-    fontWeight: Typography.weight.semibold,
-  },
-  noSetsText: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-    marginTop: Spacing.lg,
-  },
-  footer: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  doneButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.lg,
-    alignItems: 'center',
-  },
-  doneButtonPressed: {
-    opacity: 0.85,
-  },
-  doneButtonText: {
-    color: Colors.background,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  errorText: {
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginTop: Spacing.xxxl,
-    marginBottom: Spacing.lg,
-  },
-});

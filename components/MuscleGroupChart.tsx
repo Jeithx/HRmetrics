@@ -11,6 +11,64 @@ function formatVolume(vol: number): string {
 }
 
 export default function MuscleGroupChart() {
+  const styles = StyleSheet.create({
+    container: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      gap: Spacing.sm,
+    },
+    title: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    empty: {
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.xl,
+      alignItems: 'center',
+    },
+    emptyText: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.sm,
+    },
+    chart: {
+      gap: Spacing.sm,
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    groupLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      width: 74,
+    },
+    barTrack: {
+      flex: 1,
+      height: 10,
+      borderRadius: BorderRadius.sm,
+      backgroundColor: Colors.surfaceElevated,
+      overflow: 'hidden',
+    },
+    barFill: {
+      flex: 1,
+      flexDirection: 'row',
+    },
+    bar: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.sm,
+    },
+    volumeText: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      width: 36,
+      textAlign: 'right',
+    },
+  });
+
   const [data, setData] = useState<MuscleGroupVolume[]>([]);
 
   useFocusEffect(
@@ -57,60 +115,3 @@ export default function MuscleGroupChart() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
-  },
-  title: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  empty: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.sm,
-  },
-  chart: {
-    gap: Spacing.sm,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  groupLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    width: 74,
-  },
-  barTrack: {
-    flex: 1,
-    height: 10,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.surfaceElevated,
-    overflow: 'hidden',
-  },
-  barFill: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  bar: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.sm,
-  },
-  volumeText: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    width: 36,
-    textAlign: 'right',
-  },
-});

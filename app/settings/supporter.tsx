@@ -15,7 +15,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { SupporterTier } from '../../db/supporterQueries';
 
 const TIER_ORDER: Record<SupporterTier, number> = {
-  PRE_WORKOUT: 1, CHICKEN_RICE: 2, CHEAT_MEAL: 3,
+  PRE_WORKOUT: 1, CHICKEN_RICE: 2, CHEAT_MEAL: 3, MASS_GAINER: 4,
 };
 
 export default function SupporterScreen() {
@@ -193,7 +193,11 @@ export default function SupporterScreen() {
                 onPress={() => setActiveTheme(null)}
                 TC={TC}
               />
-              {SUPPORTER_THEMES.map((theme) => (
+              {SUPPORTER_THEMES.filter((theme) => {
+                const t = theme as typeof theme & { exclusiveTier?: string };
+                if (t.exclusiveTier === 'MASS_GAINER') return ownedTierOrder >= 4;
+                return true;
+              }).map((theme) => (
                 <ThemeCard
                   key={theme.id}
                   name={theme.name}

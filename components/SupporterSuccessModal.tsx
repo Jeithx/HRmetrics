@@ -58,6 +58,141 @@ export default function SupporterSuccessModal({ tier, onDone }: Props) {
 
   if (!visible || !tierDef) return null;
 
+  const styles = StyleSheet.create({
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.85)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+    },
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.xl,
+      borderWidth: 2,
+      borderColor: Colors.primary,
+      width: '88%',
+      maxHeight: '85%',
+    },
+    inner: {
+      padding: Spacing.xl,
+      alignItems: 'center',
+      gap: Spacing.md,
+    },
+    rexContainer: { marginBottom: Spacing.sm },
+    headline: {
+      color: Colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+      textAlign: 'center',
+    },
+    message: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    perksBox: {
+      width: '100%',
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      gap: Spacing.xs,
+    },
+    perksLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      marginBottom: Spacing.xs,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    perkRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+    perkText: { color: Colors.text, fontSize: Typography.size.sm, flex: 1 },
+    titleSection: { width: '100%', gap: Spacing.sm },
+    titleLabel: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    titlesScroll: { flexGrow: 0 },
+    titlePill: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.full,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      backgroundColor: Colors.surfaceElevated,
+      marginRight: Spacing.sm,
+    },
+    titlePillSelected: {
+      backgroundColor: Colors.primary,
+      borderColor: Colors.primary,
+    },
+    titlePillText: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    titlePillTextSelected: { color: '#0F0F0F' },
+    confirmBtn: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.sm,
+      alignItems: 'center',
+    },
+    confirmBtnText: {
+      color: '#0F0F0F',
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.bold,
+    },
+    confirmedTitle: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.xs,
+    },
+    confirmedTitleText: {
+      color: Colors.primary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    doneBtn: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.xxxl,
+      marginTop: Spacing.sm,
+    },
+    doneBtnText: {
+      color: '#0F0F0F',
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+  });
+
+  function PerkRow({ perk, delayIndex }: { perk: string; delayIndex: number }) {
+    const opacity = useSharedValue(0);
+    const translateY = useSharedValue(12);
+
+    useEffect(() => {
+      const delay = delayIndex * 150;
+      opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
+      translateY.value = withDelay(delay, withSpring(0, { damping: 14 }));
+    }, []);
+
+    const style = useAnimatedStyle(() => ({
+      opacity: opacity.value,
+      transform: [{ translateY: translateY.value }],
+    }));
+
+    return (
+      <Animated.View style={[styles.perkRow, style]}>
+        <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
+        <Text style={styles.perkText}>{perk}</Text>
+      </Animated.View>
+    );
+  }
+
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
       <Animated.View style={[styles.overlay, bgStyle]}>
@@ -138,137 +273,3 @@ export default function SupporterSuccessModal({ tier, onDone }: Props) {
   );
 }
 
-function PerkRow({ perk, delayIndex }: { perk: string; delayIndex: number }) {
-  const opacity = useSharedValue(0);
-  const translateY = useSharedValue(12);
-
-  useEffect(() => {
-    const delay = delayIndex * 150;
-    opacity.value = withDelay(delay, withTiming(1, { duration: 300 }));
-    translateY.value = withDelay(delay, withSpring(0, { damping: 14 }));
-  }, []);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-    transform: [{ translateY: translateY.value }],
-  }));
-
-  return (
-    <Animated.View style={[styles.perkRow, style]}>
-      <Ionicons name="checkmark-circle" size={14} color={Colors.primary} />
-      <Text style={styles.perkText}>{perk}</Text>
-    </Animated.View>
-  );
-}
-
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.85)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.xl,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    width: '88%',
-    maxHeight: '85%',
-  },
-  inner: {
-    padding: Spacing.xl,
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  rexContainer: { marginBottom: Spacing.sm },
-  headline: {
-    color: Colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-    textAlign: 'center',
-  },
-  message: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  perksBox: {
-    width: '100%',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    gap: Spacing.xs,
-  },
-  perksLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    marginBottom: Spacing.xs,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  perkRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
-  perkText: { color: Colors.text, fontSize: Typography.size.sm, flex: 1 },
-  titleSection: { width: '100%', gap: Spacing.sm },
-  titleLabel: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  titlesScroll: { flexGrow: 0 },
-  titlePill: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surfaceElevated,
-    marginRight: Spacing.sm,
-  },
-  titlePillSelected: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  titlePillText: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  titlePillTextSelected: { color: '#0F0F0F' },
-  confirmBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-  },
-  confirmBtnText: {
-    color: '#0F0F0F',
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.bold,
-  },
-  confirmedTitle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  confirmedTitleText: {
-    color: Colors.primary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  doneBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xxxl,
-    marginTop: Spacing.sm,
-  },
-  doneBtnText: {
-    color: '#0F0F0F',
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-});

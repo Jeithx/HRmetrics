@@ -22,28 +22,146 @@ const CATEGORY_COLOR: Record<string, string> = {
   milestone: '#A78BFA',
 };
 
-function InsightCard({ insight }: { insight: Insight }) {
-  const accent = CATEGORY_COLOR[insight.category] ?? Colors.primary;
-  return (
-    <View style={[styles.insightCard, { borderLeftColor: accent }]}>
-      <View style={styles.insightHeader}>
-        <Text style={styles.insightIcon}>{insight.icon}</Text>
-        <Text style={styles.insightTitle}>{insight.title}</Text>
-      </View>
-      <Text style={styles.insightMessage}>{insight.message}</Text>
-      {insight.actionLabel && insight.actionRoute && (
-        <Pressable
-          style={styles.actionBtn}
-          onPress={() => router.push(insight.actionRoute as never)}
-        >
-          <Text style={[styles.actionBtnText, { color: accent }]}>{insight.actionLabel} →</Text>
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
 export default function RexScreen() {
+  const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: Colors.background },
+    content: { paddingHorizontal: Spacing.lg, gap: Spacing.md },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: Spacing.sm,
+    },
+    headerTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: 2,
+    },
+    mascotSection: {
+      alignItems: 'center',
+      gap: Spacing.xs,
+      paddingVertical: Spacing.lg,
+    },
+    rexName: {
+      color: Colors.primary,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: 3,
+      marginTop: Spacing.sm,
+    },
+    rexSubtitle: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    lastUpdated: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      marginTop: Spacing.xs,
+    },
+    sectionLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    insightCard: {
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      borderLeftWidth: 3,
+      gap: Spacing.xs,
+    },
+    insightHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+    },
+    insightIcon: { fontSize: 20 },
+    insightTitle: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    insightMessage: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      lineHeight: Typography.size.sm * Typography.lineHeight.normal,
+    },
+    actionBtn: { marginTop: Spacing.xs },
+    actionBtnText: {
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    loadingCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    loadingText: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+    emptyCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    emptyText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+    },
+    summaryCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      overflow: 'hidden',
+    },
+    summaryRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: Spacing.md,
+    },
+    summaryLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    summaryValue: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    divider: { height: 1, backgroundColor: Colors.border, marginHorizontal: Spacing.md },
+  });
+
+  function InsightCard({ insight }: { insight: Insight }) {
+    const accent = CATEGORY_COLOR[insight.category] ?? Colors.primary;
+    return (
+      <View style={[styles.insightCard, { borderLeftColor: accent }]}>
+        <View style={styles.insightHeader}>
+          <Text style={styles.insightIcon}>{insight.icon}</Text>
+          <Text style={styles.insightTitle}>{insight.title}</Text>
+        </View>
+        <Text style={styles.insightMessage}>{insight.message}</Text>
+        {insight.actionLabel && insight.actionRoute && (
+          <Pressable
+            style={styles.actionBtn}
+            onPress={() => router.push(insight.actionRoute as never)}
+          >
+            <Text style={[styles.actionBtnText, { color: accent }]}>{insight.actionLabel} →</Text>
+          </Pressable>
+        )}
+      </View>
+    );
+  }
+
   const insets = useSafeAreaInsets();
   const { insights, topInsight, dailyMood, isLoading, lastGeneratedAt } = useInsightStore();
   const { status, tier } = useSupporterStore();
@@ -161,120 +279,3 @@ export default function RexScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content: { paddingHorizontal: Spacing.lg, gap: Spacing.md },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
-  },
-  headerTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 2,
-  },
-  mascotSection: {
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.lg,
-  },
-  rexName: {
-    color: Colors.primary,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 3,
-    marginTop: Spacing.sm,
-  },
-  rexSubtitle: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  lastUpdated: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    marginTop: Spacing.xs,
-  },
-  sectionLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  insightCard: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderLeftWidth: 3,
-    gap: Spacing.xs,
-  },
-  insightHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  insightIcon: { fontSize: 20 },
-  insightTitle: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  insightMessage: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    lineHeight: Typography.size.sm * Typography.lineHeight.normal,
-  },
-  actionBtn: { marginTop: Spacing.xs },
-  actionBtnText: {
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  loadingCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  loadingText: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  emptyCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  emptyText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-  },
-  summaryCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: Spacing.md,
-  },
-  summaryLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  summaryValue: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  divider: { height: 1, backgroundColor: Colors.border, marginHorizontal: Spacing.md },
-});

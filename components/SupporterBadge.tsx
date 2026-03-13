@@ -12,6 +12,7 @@ const TIER_STYLES: Record<SupporterTier, { bg: string; textColor: string }> = {
   PRE_WORKOUT:  { bg: '#2A2A2A',  textColor: '#AAAAAA' },
   CHICKEN_RICE: { bg: '#F59E0B',  textColor: '#1A1A1A' },
   CHEAT_MEAL:   { bg: '#C8FF00',  textColor: '#1A1A1A' },
+  MASS_GAINER:  { bg: '#FFB800',  textColor: '#0A0800' },
 };
 
 export default function SupporterBadge({ tier, size = 'sm' }: SupporterBadgeProps) {
@@ -20,6 +21,18 @@ export default function SupporterBadge({ tier, size = 'sm' }: SupporterBadgeProp
 
   const { bg, textColor } = TIER_STYLES[tier];
   const isMd = size === 'md';
+
+  const styles = StyleSheet.create({
+    badge: {
+      paddingVertical: 2,
+      borderRadius: BorderRadius.full,
+      alignSelf: 'flex-start',
+    },
+    text: {
+      fontWeight: Typography.weight.bold,
+      letterSpacing: 0.3,
+    },
+  });
 
   return (
     <View style={[
@@ -32,15 +45,3 @@ export default function SupporterBadge({ tier, size = 'sm' }: SupporterBadgeProp
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    paddingVertical: 2,
-    borderRadius: BorderRadius.full,
-    alignSelf: 'flex-start',
-  },
-  text: {
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 0.3,
-  },
-});

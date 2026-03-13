@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import Reanimated, { FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { SkeletonCard } from '../../components/SkeletonLoader';
 import { useWaterStore } from '../../store/useWaterStore';
@@ -60,6 +60,22 @@ function formatDateShort(dateStr: string): string {
 // ─── Swipeable Workout Card ────────────────────────────────────────────────
 
 const DELETE_WIDTH = 72;
+const CHART_H = 200;
+const SCREEN_W = Dimensions.get('window').width;
+const WATER_SCREEN_W = Dimensions.get('window').width;
+const PAD_LEFT = 40;
+const PAD_BOTTOM = 20;
+const PAD_TOP = 12;
+const WATER_COLOR = '#4FC3F7';
+
+function getLocalDateStr(daysAgo = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 interface SwipeableWorkoutCardProps {
   workout: WorkoutSummary;
@@ -68,549 +84,6 @@ interface SwipeableWorkoutCardProps {
   onDelete: () => void;
 }
 
-function SwipeableWorkoutCard({ workout, unit, onPress, onDelete }: SwipeableWorkoutCardProps) {
-  const translateX = useRef(new Animated.Value(0)).current;
-  const isOpen = useRef(false);
-
-  const pan = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_, { dx, dy }) =>
-        Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10,
-      onPanResponderMove: (_, { dx }) => {
-        const base = isOpen.current ? -DELETE_WIDTH : 0;
-        const clamped = Math.max(-DELETE_WIDTH, Math.min(0, dx + base));
-        translateX.setValue(clamped);
-      },
-      onPanResponderRelease: (_, { dx }) => {
-        const base = isOpen.current ? -DELETE_WIDTH : 0;
-        if (dx + base < -DELETE_WIDTH / 2) {
-          Animated.spring(translateX, { toValue: -DELETE_WIDTH, useNativeDriver: true }).start();
-          isOpen.current = true;
-        } else {
-          Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
-          isOpen.current = false;
-        }
-      },
-    })
-  ).current;
-
-  const close = () => {
-    Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
-    isOpen.current = false;
-  };
-
-  const handleDeletePress = () => {
-    close();
-    Alert.alert(
-      'Delete Workout',
-      `Delete workout from ${formatDate(workout.startedAt)}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: onDelete },
-      ]
-    );
-  };
-
-  const names = workout.exerciseNames ? workout.exerciseNames.split(',') : [];
-  const preview = names.slice(0, 3).join(', ');
-  const moreCount = Math.max(0, names.length - 3);
-
-  return (
-    <View style={styles.swipeWrapper}>
-      <View style={styles.deleteZone}>
-        <Pressable style={styles.deleteAction} onPress={handleDeletePress}>
-          <Ionicons name="trash-outline" size={20} color={Colors.text} />
-          <Text style={styles.deleteActionText}>Delete</Text>
-        </Pressable>
-      </View>
-      <Animated.View style={{ transform: [{ translateX }], backgroundColor: Colors.background }} {...pan.panHandlers}>
-        <Pressable
-          style={({ pressed }) => [styles.workoutCard, pressed && styles.workoutCardPressed]}
-          onPress={() => {
-            if (isOpen.current) { close(); } else { onPress(); }
-          }}
-        >
-          <View style={styles.cardTitleRow}>
-            <Text style={styles.cardDate}>{formatDate(workout.startedAt)}</Text>
-            {workout.routineDayName ? (
-              <Text style={styles.cardDayName}> · {workout.routineDayName}</Text>
-            ) : null}
-          </View>
-          <View style={styles.cardMeta}>
-            <Text style={styles.cardMetaText}>{formatDuration(workout.durationSeconds)}</Text>
-            <Text style={styles.cardMetaDot}>·</Text>
-            <Text style={styles.cardMetaText}>{fmtVol(workout.totalVolume, unit)}</Text>
-          </View>
-          {preview.length > 0 && (
-            <Text style={styles.cardExercises} numberOfLines={1}>
-              {preview}{moreCount > 0 ? ` +${moreCount}` : ''}
-            </Text>
-          )}
-        </Pressable>
-      </Animated.View>
-    </View>
-  );
-}
-
-// ─── Progress Line Chart (SVG) ─────────────────────────────────────────────
-
-const CHART_H = 180;
-const PAD_LEFT = 48;
-const PAD_BOTTOM = 28;
-const PAD_TOP = 10;
-const SCREEN_W = Dimensions.get('window').width;
-
-function ProgressChart({ data, unit }: { data: BestSetPerSession[]; unit: WeightUnit }) {
-  if (data.length < 2) {
-    return (
-      <View style={styles.noData}>
-        <Text style={styles.noDataText}>Log at least 2 sessions to see progress</Text>
-      </View>
-    );
-  }
-
-  const chartWidth = SCREEN_W - Spacing.lg * 4;
-  const plotW = chartWidth - PAD_LEFT;
-  const plotH = CHART_H - PAD_BOTTOM - PAD_TOP;
-  const values = data.map((d) => kgToDisplay(d.estimated1rm, unit));
-  const minY = Math.min(...values);
-  const maxY = Math.max(...values);
-  const range = maxY - minY || 1;
-
-  const getX = (i: number) => PAD_LEFT + (i / (data.length - 1)) * plotW;
-  const getY = (v: number) => PAD_TOP + (1 - (v - minY) / range) * plotH;
-
-  const pathD = values
-    .map((v, i) => `${i === 0 ? 'M' : 'L'}${getX(i).toFixed(1)},${getY(v).toFixed(1)}`)
-    .join(' ');
-
-  const yLabels = [0, 1, 2, 3].map((i) => {
-    const val = minY + (range / 3) * i;
-    return { val: Math.round(val), y: getY(val) };
-  });
-
-  const xIndices = [0, Math.floor((data.length - 1) / 2), data.length - 1].filter(
-    (v, i, arr) => arr.indexOf(v) === i
-  );
-
-  return (
-    <View style={{ height: CHART_H }}>
-      <Svg width={chartWidth} height={CHART_H}>
-        {yLabels.map(({ val, y }) => (
-          <G key={val}>
-            <SvgLine x1={PAD_LEFT} y1={y} x2={chartWidth} y2={y} stroke={Colors.border} strokeWidth={1} />
-            <SvgText x={PAD_LEFT - 4} y={y + 4} fill={Colors.textTertiary} fontSize={9} textAnchor="end">
-              {val}
-            </SvgText>
-          </G>
-        ))}
-        <Path d={pathD} stroke={Colors.primary} strokeWidth={2} fill="none" strokeLinejoin="round" />
-        {values.map((v, i) => (
-          <Circle key={i} cx={getX(i)} cy={getY(v)} r={4} fill={Colors.primary} />
-        ))}
-        {xIndices.map((i) => (
-          <SvgText key={i} x={getX(i)} y={CHART_H - 6} fill={Colors.textTertiary} fontSize={9} textAnchor="middle">
-            {formatDateShort(data[i].date)}
-          </SvgText>
-        ))}
-      </Svg>
-    </View>
-  );
-}
-
-// ─── Workouts Tab ──────────────────────────────────────────────────────────
-
-function WorkoutsTab({ unit }: { unit: WeightUnit }) {
-  const workouts = useHistoryStore((s) => s.workouts);
-  const hasMore = useHistoryStore((s) => s.hasMore);
-  const isLoadingMore = useHistoryStore((s) => s.isLoadingMore);
-  const hasLoadedOnce = useHistoryStore((s) => s.hasLoadedOnce);
-  const loadMoreWorkouts = useHistoryStore((s) => s.loadMoreWorkouts);
-  const deleteWorkout = useHistoryStore((s) => s.deleteWorkout);
-  const reducedMotion = useReducedMotion();
-
-  return (
-    <FlatList
-      data={workouts}
-      keyExtractor={(item) => String(item.id)}
-      ListHeaderComponent={
-        <>
-          <StatsOverview />
-          <WeeklyVolumeChart />
-          <View style={styles.logHeader}>
-            <Text style={styles.logHeaderText}>WORKOUT LOG</Text>
-          </View>
-        </>
-      }
-      ListEmptyComponent={
-        hasLoadedOnce ? (
-          <View style={styles.emptyList}>
-            <Text style={styles.emptyListText}>No workouts yet</Text>
-            <Text style={styles.emptyListHint}>Finish a workout to see it here</Text>
-          </View>
-        ) : (
-          <View style={styles.skeletonContainer}>
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
-          </View>
-        )
-      }
-      renderItem={({ item, index }) => (
-        <Reanimated.View
-          entering={reducedMotion ? undefined : FadeInDown.delay(Math.min(index, 5) * 60).duration(300)}
-        >
-          <SwipeableWorkoutCard
-            workout={item}
-            unit={unit}
-            onPress={() => router.push(`/history/${item.id}`)}
-            onDelete={() => deleteWorkout(item.id)}
-          />
-        </Reanimated.View>
-      )}
-      onEndReached={loadMoreWorkouts}
-      onEndReachedThreshold={0.3}
-      ListFooterComponent={
-        isLoadingMore ? (
-          <View style={styles.loadingMore}>
-            <Text style={styles.loadingMoreText}>Loading…</Text>
-          </View>
-        ) : !hasMore && workouts.length > 0 ? (
-          <View style={styles.loadingMore}>
-            <Text style={styles.loadingMoreText}>All workouts loaded</Text>
-          </View>
-        ) : null
-      }
-      contentContainerStyle={styles.listContent}
-    />
-  );
-}
-
-// ─── Progress Tab ──────────────────────────────────────────────────────────
-
-function ProgressTab({ unit }: { unit: WeightUnit }) {
-  const [pickerVisible, setPickerVisible] = useState(false);
-  const [selected, setSelected] = useState<{ id: number; name: string } | null>(null);
-  const [chartData, setChartData] = useState<BestSetPerSession[]>([]);
-  const [sessions, setSessions] = useState<ExerciseSession[]>([]);
-  const [pr, setPr] = useState<PRWithName | null>(null);
-
-  const handleSelect = (id: number, name: string) => {
-    setSelected({ id, name });
-    setChartData(getBestSetPerSession(id));
-    setSessions(getExerciseHistory(id, 20));
-    setPr(getPRForExercise(id));
-    setPickerVisible(false);
-  };
-
-  return (
-    <ScrollView style={styles.progressScroll} contentContainerStyle={styles.progressContent}>
-      <Pressable
-        style={({ pressed }) => [styles.exercisePickerBtn, pressed && styles.exercisePickerBtnPressed]}
-        onPress={() => setPickerVisible(true)}
-      >
-        <Ionicons name="barbell-outline" size={18} color={Colors.textSecondary} />
-        <Text style={styles.exercisePickerText} numberOfLines={1}>
-          {selected ? selected.name : 'Select Exercise'}
-        </Text>
-        <Ionicons name="chevron-down" size={16} color={Colors.textTertiary} />
-      </Pressable>
-
-      {selected && (
-        <>
-          <View style={styles.chartCard}>
-            <Text style={styles.chartTitle}>
-              ESTIMATED 1RM PROGRESS ({unit.toUpperCase()})
-            </Text>
-            <ProgressChart data={chartData} unit={unit} />
-          </View>
-
-          {pr && (
-            <View style={styles.prCard}>
-              <Ionicons name="trophy" size={18} color={Colors.primary} />
-              <View style={styles.prCardInfo}>
-                <Text style={styles.prCardLabel}>Personal Record</Text>
-                <Text style={styles.prCardValue}>
-                  {kgToDisplay(pr.weight_kg, unit)}{unit} × {pr.reps} reps
-                </Text>
-              </View>
-              <Text style={styles.prCardEst}>
-                ~{kgToDisplay(pr.estimated_1rm, unit)} {unit} 1RM
-              </Text>
-            </View>
-          )}
-
-          <Text style={styles.sectionLabel}>SESSION HISTORY</Text>
-
-          {sessions.length === 0 && (
-            <Text style={styles.emptyListHint}>No sessions yet</Text>
-          )}
-
-          {sessions.map((session) => (
-            <View key={session.workoutId} style={styles.sessionCard}>
-              <Text style={styles.sessionDate}>{formatDate(session.date)}</Text>
-              {session.sets.map((s, si) => (
-                <View key={si} style={styles.sessionSetRow}>
-                  <Text style={styles.sessionSetNum}>Set {si + 1}</Text>
-                  <Text style={styles.sessionSetDetail}>
-                    {kgToDisplay(s.weightKg, unit)}{unit} × {s.reps}
-                  </Text>
-                  <Text style={styles.sessionSetEst}>
-                    ~{kgToDisplay(s.estimated1rm, unit)} {unit}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          ))}
-
-          <MuscleGroupChart />
-        </>
-      )}
-
-      <ExercisePicker
-        visible={pickerVisible}
-        onSelect={handleSelect}
-        onClose={() => setPickerVisible(false)}
-      />
-    </ScrollView>
-  );
-}
-
-// ─── Records Tab ───────────────────────────────────────────────────────────
-
-function RecordsTab({ unit }: { unit: WeightUnit }) {
-  const prs = useHistoryStore((s) => s.prs);
-
-  if (prs.length === 0) {
-    return (
-      <View style={styles.emptyList}>
-        <Text style={styles.emptyListText}>No personal records yet</Text>
-        <Text style={styles.emptyListHint}>Complete workouts to earn PRs</Text>
-      </View>
-    );
-  }
-
-  const sevenDaysAgo = Date.now() - 7 * 86400000;
-
-  const grouped = new Map<string, PRWithName[]>();
-  for (const pr of prs) {
-    const group = grouped.get(pr.muscleGroup) ?? [];
-    group.push(pr);
-    grouped.set(pr.muscleGroup, group);
-  }
-
-  return (
-    <ScrollView contentContainerStyle={styles.recordsContent}>
-      {Array.from(grouped.entries()).map(([group, groupPRs]) => (
-        <View key={group} style={styles.prGroup}>
-          <Text style={styles.prGroupLabel}>{group.toUpperCase()}</Text>
-          {groupPRs.map((pr) => {
-            const achievedMs = new Date(
-              pr.achieved_at.includes('T') ? pr.achieved_at : pr.achieved_at.replace(' ', 'T') + 'Z'
-            ).getTime();
-            const isRecent = achievedMs > sevenDaysAgo;
-            return (
-              <View key={pr.id} style={[styles.prRow, isRecent && styles.prRowRecent]}>
-                <View style={styles.prRowLeft}>
-                  <Text style={[styles.prRowName, isRecent && styles.prRowNameRecent]}>
-                    {pr.exerciseName}
-                  </Text>
-                  <Text style={styles.prRowDate}>{formatDateShort(pr.achieved_at)}</Text>
-                </View>
-                <View style={styles.prRowRight}>
-                  <Text style={[styles.prRowWeight, isRecent && styles.prRowWeightRecent]}>
-                    {kgToDisplay(pr.weight_kg, unit)}{unit} × {pr.reps}
-                  </Text>
-                  <Text style={styles.prRowEst}>
-                    ~{kgToDisplay(pr.estimated_1rm, unit)} {unit} 1RM
-                  </Text>
-                </View>
-                {isRecent && (
-                  <Ionicons name="trophy" size={14} color={Colors.primary} />
-                )}
-              </View>
-            );
-          })}
-        </View>
-      ))}
-    </ScrollView>
-  );
-}
-
-// ─── Water Tab ─────────────────────────────────────────────────────────────
-
-const WATER_COLOR = '#4FC3F7';
-const WATER_SCREEN_W = Dimensions.get('window').width;
-
-function getLocalDateStr(daysAgo = 0): string {
-  const d = new Date();
-  d.setDate(d.getDate() - daysAgo);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function WaterDayModal({
-  date,
-  onClose,
-}: {
-  date: string;
-  onClose: () => void;
-}) {
-  const [entries, setEntries] = useState<WaterEntry[]>([]);
-  const { waterUnit } = useWaterStore();
-
-  useEffect(() => {
-    try {
-      setEntries(getWaterEntriesByDate(date));
-    } catch { }
-  }, [date]);
-
-  function fmtTime(iso: string) {
-    const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'));
-    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-  }
-
-  return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.modalBackdrop} onPress={onClose} />
-      <View style={styles.modalSheet}>
-        <Text style={styles.modalTitle}>{date}</Text>
-        {entries.length === 0 ? (
-          <Text style={styles.emptyListHint}>No entries for this day</Text>
-        ) : (
-          entries.map((e) => (
-            <View key={e.id} style={styles.waterModalRow}>
-              <Text style={styles.waterModalTime}>{fmtTime(e.recordedAt)}</Text>
-              <Text style={styles.waterModalAmt}>{formatWater(e.amountMl, waterUnit)}</Text>
-              {e.notes ? <Text style={styles.waterModalNotes}>{e.notes}</Text> : null}
-            </View>
-          ))
-        )}
-        <Pressable style={styles.modalClose} onPress={onClose}>
-          <Text style={styles.modalCloseText}>Close</Text>
-        </Pressable>
-      </View>
-    </Modal>
-  );
-}
-
-function WaterHistoryChart({ goalMl }: { goalMl: number }) {
-  const { history, waterUnit } = useWaterStore();
-  const CHART_W = WATER_SCREEN_W - Spacing.lg * 4;
-  const CHART_H = 160;
-  const LABEL_H = 24;
-  const BAR_COUNT = Math.min(30, history.length || 1);
-  const BAR_GAP = 2;
-  const BAR_W = (CHART_W - BAR_GAP * (BAR_COUNT - 1)) / BAR_COUNT;
-
-  const end = getLocalDateStr(0);
-  const start = getLocalDateStr(29);
-  const [rangeData, setRangeData] = useState<{ date: string; totalMl: number }[]>([]);
-
-  useEffect(() => {
-    try { setRangeData(getWaterRange(start, end)); } catch { }
-  }, [start, end]);
-
-  const dates = Array.from({ length: 30 }, (_, i) => getLocalDateStr(29 - i));
-  const dataMap = new Map(rangeData.map((d) => [d.date, d.totalMl]));
-  const bars = dates.map((date) => ({ date, totalMl: dataMap.get(date) ?? 0 })).slice(-BAR_COUNT);
-  const maxVal = Math.max(...bars.map((b) => b.totalMl), goalMl, 1);
-  const goalY = CHART_H - (goalMl / maxVal) * CHART_H;
-  const today = getLocalDateStr(0);
-
-  return (
-    <View style={styles.chartCard}>
-      <Text style={styles.chartTitle}>LAST 30 DAYS</Text>
-      <Svg width={CHART_W} height={CHART_H + LABEL_H}>
-        {goalMl > 0 && (
-          <SvgLine x1={0} y1={goalY} x2={CHART_W} y2={goalY} stroke={WATER_COLOR} strokeWidth={1} strokeDasharray="4 4" opacity={0.5} />
-        )}
-        {bars.map(({ date, totalMl }, i) => {
-          const barH = (totalMl / maxVal) * CHART_H;
-          const x = i * (BAR_W + BAR_GAP);
-          const isToday = date === today;
-          const hitsGoal = goalMl > 0 && totalMl >= goalMl;
-          const fill = totalMl === 0 ? Colors.surfaceElevated : hitsGoal ? WATER_COLOR : Colors.textTertiary;
-          const showLabel = i === 0 || i === 14 || i === bars.length - 1;
-          return (
-            <React.Fragment key={date}>
-              <Rect x={x} y={CHART_H - barH} width={BAR_W} height={Math.max(barH, 2)} rx={1} fill={fill} opacity={isToday ? 1 : 0.75} />
-              {showLabel && (
-                <SvgText x={x + BAR_W / 2} y={CHART_H + LABEL_H - 4} fill={Colors.textTertiary} fontSize={8} textAnchor="middle">
-                  {date.slice(5)}
-                </SvgText>
-              )}
-            </React.Fragment>
-          );
-        })}
-      </Svg>
-    </View>
-  );
-}
-
-function WaterTab() {
-  const { stats, history, waterUnit, dailyGoalMl, loadHistory, loadStats, loadSettings } = useWaterStore();
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  useFocusEffect(
-    useCallback(() => {
-      loadSettings();
-      loadHistory();
-      loadStats();
-    }, [loadSettings, loadHistory, loadStats])
-  );
-
-  const statCards = [
-    { label: '7-DAY AVG', value: stats ? formatWater(stats.sevenDayAvg, waterUnit) : '—' },
-    { label: '30-DAY AVG', value: stats ? formatWater(stats.thirtyDayAvg, waterUnit) : '—' },
-    { label: 'BEST DAY', value: stats?.bestDay ? formatWater(stats.bestDay.amount, waterUnit) : '—' },
-    { label: 'STREAK', value: stats ? `${stats.currentStreak}d` : '—' },
-  ];
-
-  return (
-    <ScrollView contentContainerStyle={styles.waterTabContent}>
-      {/* Stats */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {statCards.map((c) => (
-          <View key={c.label} style={styles.waterStatCard}>
-            <Text style={styles.waterStatLabel}>{c.label}</Text>
-            <Text style={styles.waterStatValue}>{c.value}</Text>
-          </View>
-        ))}
-      </ScrollView>
-
-      {/* Chart */}
-      <WaterHistoryChart goalMl={dailyGoalMl} />
-
-      {/* Daily summaries */}
-      <Text style={styles.logHeaderText}>DAILY LOG</Text>
-      {history.length === 0 ? (
-        <View style={styles.emptyList}>
-          <Text style={styles.emptyListText}>No water logged yet</Text>
-        </View>
-      ) : (
-        history.map((day) => {
-          const hitsGoal = dailyGoalMl > 0 && day.totalMl >= dailyGoalMl;
-          return (
-            <Pressable
-              key={day.date}
-              style={({ pressed }) => [styles.waterDayRow, pressed && { opacity: 0.8 }]}
-              onPress={() => setSelectedDate(day.date)}
-            >
-              <View style={[styles.waterDayDot, { backgroundColor: hitsGoal ? Colors.success : Colors.error }]} />
-              <Text style={styles.waterDayDate}>{day.date}</Text>
-              <Text style={styles.waterDayTotal}>{formatWater(day.totalMl, waterUnit)}</Text>
-              <Ionicons name="chevron-forward" size={14} color={Colors.textTertiary} />
-            </Pressable>
-          );
-        })
-      )}
-
-      {selectedDate && (
-        <WaterDayModal date={selectedDate} onClose={() => setSelectedDate(null)} />
-      )}
-    </ScrollView>
-  );
-}
 
 // ─── History Screen ────────────────────────────────────────────────────────
 
@@ -622,7 +95,884 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'water', label: 'Water' },
 ];
 
+function createStyles() {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: Colors.background },
+    header: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xxl,
+      paddingBottom: Spacing.md,
+      backgroundColor: Colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    headerTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+    },
+    tabScrollRow: {
+      backgroundColor: Colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+      flexGrow: 0,
+    },
+    tabRow: {
+      flexDirection: 'row',
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.sm,
+      gap: Spacing.sm,
+    },
+    tabPill: {
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.full,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    tabPillActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+    tabText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    tabTextActive: { color: Colors.background },
+    content: { flex: 1 },
+
+    // Workout list
+    listContent: { paddingBottom: Spacing.xxxl },
+    logHeader: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.md,
+      paddingBottom: Spacing.xs,
+    },
+    logHeaderText: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    swipeWrapper: { overflow: 'hidden' },
+    deleteZone: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      right: 0,
+      width: DELETE_WIDTH,
+      backgroundColor: Colors.error,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    deleteAction: { alignItems: 'center', gap: 2 },
+    deleteActionText: {
+      color: Colors.text,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+    },
+    workoutCard: {
+      backgroundColor: Colors.surface,
+      marginHorizontal: Spacing.lg,
+      marginVertical: Spacing.xs,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.xs,
+    },
+    workoutCardPressed: { opacity: 0.85 },
+    cardTitleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
+    cardDate: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    cardDayName: { color: Colors.textSecondary, fontSize: Typography.size.md },
+    cardMeta: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+    cardMetaText: { color: Colors.textSecondary, fontSize: Typography.size.sm },
+    cardMetaDot: { color: Colors.textTertiary, fontSize: Typography.size.sm },
+    cardExercises: { color: Colors.textTertiary, fontSize: Typography.size.xs },
+    skeletonContainer: { padding: Spacing.lg, gap: Spacing.sm },
+    emptyList: { alignItems: 'center', paddingTop: Spacing.xxxl, gap: Spacing.sm },
+    emptyListText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.semibold,
+    },
+    emptyListHint: { color: Colors.textTertiary, fontSize: Typography.size.sm },
+    loadingMore: { alignItems: 'center', padding: Spacing.lg },
+    loadingMoreText: { color: Colors.textTertiary, fontSize: Typography.size.sm },
+
+    // Progress tab
+    progressScroll: { flex: 1, backgroundColor: Colors.background },
+    progressContent: { padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxxl },
+    exercisePickerBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    exercisePickerBtnPressed: { opacity: 0.85 },
+    exercisePickerText: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    chartCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    chartTitle: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    noData: { height: CHART_H, alignItems: 'center', justifyContent: 'center' },
+    noDataText: { color: Colors.textTertiary, fontSize: Typography.size.sm, textAlign: 'center' },
+    prCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      backgroundColor: Colors.primaryMuted,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.primary,
+    },
+    prCardInfo: { flex: 1, gap: 2 },
+    prCardLabel: {
+      color: Colors.primary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    prCardValue: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    prCardEst: {
+      color: Colors.primary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    sectionLabel: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginTop: Spacing.xs,
+    },
+    sessionCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.xs,
+    },
+    sessionDate: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+      marginBottom: 2,
+    },
+    sessionSetRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
+    sessionSetNum: { color: Colors.textTertiary, fontSize: Typography.size.xs, width: 36 },
+    sessionSetDetail: { flex: 1, color: Colors.textSecondary, fontSize: Typography.size.sm },
+    sessionSetEst: { color: Colors.textTertiary, fontSize: Typography.size.xs },
+
+    // Records tab
+    recordsContent: { padding: Spacing.lg, gap: Spacing.xl, paddingBottom: Spacing.xxxl },
+    prGroup: { gap: Spacing.sm },
+    prGroupLabel: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    prRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    prRowRecent: { borderColor: Colors.primary, backgroundColor: Colors.primaryMuted },
+    prRowLeft: { flex: 1, gap: 2 },
+    prRowName: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    prRowNameRecent: { color: Colors.primary },
+    prRowDate: { color: Colors.textTertiary, fontSize: Typography.size.xs },
+    prRowRight: { alignItems: 'flex-end', gap: 2 },
+    prRowWeight: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    prRowWeightRecent: { color: Colors.text },
+    prRowEst: { color: Colors.textTertiary, fontSize: Typography.size.xs },
+
+    // Water tab
+    waterTabContent: { padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxxl },
+    waterStatCard: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      paddingHorizontal: Spacing.lg,
+      paddingVertical: Spacing.md,
+      marginRight: Spacing.sm,
+      alignItems: 'center',
+      gap: 4,
+      minWidth: 90,
+    },
+    waterStatLabel: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    waterStatValue: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    waterDayRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.md,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    waterDayDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    waterDayDate: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.medium,
+    },
+    waterDayTotal: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+    },
+    waterModalRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: Spacing.sm,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+      gap: Spacing.sm,
+    },
+    waterModalTime: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      width: 60,
+    },
+    waterModalAmt: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+      flex: 1,
+    },
+    waterModalNotes: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+    },
+    modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+    modalSheet: {
+      backgroundColor: Colors.surface,
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      padding: Spacing.xl,
+      paddingBottom: Spacing.xxxl,
+      maxHeight: '60%',
+      borderTopWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.xs,
+    },
+    modalTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+      marginBottom: Spacing.sm,
+    },
+    modalClose: {
+      alignItems: 'center',
+      paddingVertical: Spacing.md,
+      marginTop: Spacing.sm,
+    },
+    modalCloseText: {
+      color: Colors.primary,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+  });
+}
+
 export default function HistoryScreen() {
+  const styles = useMemo(createStyles, []);
+
+  // ─── Swipeable Workout Card ──────────────────────────────────────────────
+
+  function SwipeableWorkoutCard({ workout, unit: wu, onPress, onDelete }: SwipeableWorkoutCardProps) {
+    const translateX = useRef(new Animated.Value(0)).current;
+    const isOpen = useRef(false);
+
+    const pan = useRef(
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, { dx, dy }) =>
+          Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10,
+        onPanResponderMove: (_, { dx }) => {
+          const base = isOpen.current ? -DELETE_WIDTH : 0;
+          const clamped = Math.max(-DELETE_WIDTH, Math.min(0, dx + base));
+          translateX.setValue(clamped);
+        },
+        onPanResponderRelease: (_, { dx }) => {
+          const base = isOpen.current ? -DELETE_WIDTH : 0;
+          if (dx + base < -DELETE_WIDTH / 2) {
+            Animated.spring(translateX, { toValue: -DELETE_WIDTH, useNativeDriver: true }).start();
+            isOpen.current = true;
+          } else {
+            Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+            isOpen.current = false;
+          }
+        },
+      })
+    ).current;
+
+    const close = () => {
+      Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+      isOpen.current = false;
+    };
+
+    const handleDeletePress = () => {
+      close();
+      Alert.alert(
+        'Delete Workout',
+        `Delete workout from ${formatDate(workout.startedAt)}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: onDelete },
+        ]
+      );
+    };
+
+    const names = workout.exerciseNames ? workout.exerciseNames.split(',') : [];
+    const preview = names.slice(0, 3).join(', ');
+    const moreCount = Math.max(0, names.length - 3);
+
+    return (
+      <View style={styles.swipeWrapper}>
+        <View style={styles.deleteZone}>
+          <Pressable style={styles.deleteAction} onPress={handleDeletePress}>
+            <Ionicons name="trash-outline" size={20} color={Colors.text} />
+            <Text style={styles.deleteActionText}>Delete</Text>
+          </Pressable>
+        </View>
+        <Animated.View style={{ transform: [{ translateX }], backgroundColor: Colors.background }} {...pan.panHandlers}>
+          <Pressable
+            style={({ pressed }) => [styles.workoutCard, pressed && styles.workoutCardPressed]}
+            onPress={() => {
+              if (isOpen.current) { close(); } else { onPress(); }
+            }}
+          >
+            <View style={styles.cardTitleRow}>
+              <Text style={styles.cardDate}>{formatDate(workout.startedAt)}</Text>
+              {workout.routineDayName ? (
+                <Text style={styles.cardDayName}> · {workout.routineDayName}</Text>
+              ) : null}
+            </View>
+            <View style={styles.cardMeta}>
+              <Text style={styles.cardMetaText}>{formatDuration(workout.durationSeconds)}</Text>
+              <Text style={styles.cardMetaDot}>·</Text>
+              <Text style={styles.cardMetaText}>{fmtVol(workout.totalVolume, wu)}</Text>
+            </View>
+            {preview.length > 0 && (
+              <Text style={styles.cardExercises} numberOfLines={1}>
+                {preview}{moreCount > 0 ? ` +${moreCount}` : ''}
+              </Text>
+            )}
+          </Pressable>
+        </Animated.View>
+      </View>
+    );
+  }
+
+  // ─── Progress Line Chart (SVG) ───────────────────────────────────────────
+
+  function ProgressChart({ data, unit: pu }: { data: BestSetPerSession[]; unit: WeightUnit }) {
+    if (data.length < 2) {
+      return (
+        <View style={styles.noData}>
+          <Text style={styles.noDataText}>Log at least 2 sessions to see progress</Text>
+        </View>
+      );
+    }
+
+    const chartWidth = SCREEN_W - Spacing.lg * 4;
+    const plotW = chartWidth - PAD_LEFT;
+    const plotH = CHART_H - PAD_BOTTOM - PAD_TOP;
+    const values = data.map((d) => kgToDisplay(d.estimated1rm, pu));
+    const minY = Math.min(...values);
+    const maxY = Math.max(...values);
+    const range = maxY - minY || 1;
+
+    const getX = (i: number) => PAD_LEFT + (i / (data.length - 1)) * plotW;
+    const getY = (v: number) => PAD_TOP + (1 - (v - minY) / range) * plotH;
+
+    const pathD = values
+      .map((v, i) => `${i === 0 ? 'M' : 'L'}${getX(i).toFixed(1)},${getY(v).toFixed(1)}`)
+      .join(' ');
+
+    const yLabels = [0, 1, 2, 3].map((i) => {
+      const val = minY + (range / 3) * i;
+      return { val: Math.round(val), y: getY(val) };
+    });
+
+    const xIndices = [0, Math.floor((data.length - 1) / 2), data.length - 1].filter(
+      (v, i, arr) => arr.indexOf(v) === i
+    );
+
+    return (
+      <View style={{ height: CHART_H }}>
+        <Svg width={chartWidth} height={CHART_H}>
+          {yLabels.map(({ val, y }) => (
+            <G key={val}>
+              <SvgLine x1={PAD_LEFT} y1={y} x2={chartWidth} y2={y} stroke={Colors.border} strokeWidth={1} />
+              <SvgText x={PAD_LEFT - 4} y={y + 4} fill={Colors.textTertiary} fontSize={9} textAnchor="end">
+                {val}
+              </SvgText>
+            </G>
+          ))}
+          <Path d={pathD} stroke={Colors.primary} strokeWidth={2} fill="none" strokeLinejoin="round" />
+          {values.map((v, i) => (
+            <Circle key={i} cx={getX(i)} cy={getY(v)} r={4} fill={Colors.primary} />
+          ))}
+          {xIndices.map((i) => (
+            <SvgText key={i} x={getX(i)} y={CHART_H - 6} fill={Colors.textTertiary} fontSize={9} textAnchor="middle">
+              {formatDateShort(data[i].date)}
+            </SvgText>
+          ))}
+        </Svg>
+      </View>
+    );
+  }
+
+  // ─── Workouts Tab ────────────────────────────────────────────────────────
+
+  function WorkoutsTab({ unit: wu }: { unit: WeightUnit }) {
+    const workouts = useHistoryStore((s) => s.workouts);
+    const hasMore = useHistoryStore((s) => s.hasMore);
+    const isLoadingMore = useHistoryStore((s) => s.isLoadingMore);
+    const hasLoadedOnce = useHistoryStore((s) => s.hasLoadedOnce);
+    const loadMoreWorkouts = useHistoryStore((s) => s.loadMoreWorkouts);
+    const deleteWorkout = useHistoryStore((s) => s.deleteWorkout);
+    const reducedMotion = useReducedMotion();
+
+    return (
+      <FlatList
+        data={workouts}
+        keyExtractor={(item) => String(item.id)}
+        ListHeaderComponent={
+          <>
+            <StatsOverview />
+            <WeeklyVolumeChart />
+            <View style={styles.logHeader}>
+              <Text style={styles.logHeaderText}>WORKOUT LOG</Text>
+            </View>
+          </>
+        }
+        ListEmptyComponent={
+          hasLoadedOnce ? (
+            <View style={styles.emptyList}>
+              <Text style={styles.emptyListText}>No workouts yet</Text>
+              <Text style={styles.emptyListHint}>Finish a workout to see it here</Text>
+            </View>
+          ) : (
+            <View style={styles.skeletonContainer}>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </View>
+          )
+        }
+        renderItem={({ item, index }) => (
+          <Reanimated.View
+            entering={reducedMotion ? undefined : FadeInDown.delay(Math.min(index, 5) * 60).duration(300)}
+          >
+            <SwipeableWorkoutCard
+              workout={item}
+              unit={wu}
+              onPress={() => router.push(`/history/${item.id}`)}
+              onDelete={() => deleteWorkout(item.id)}
+            />
+          </Reanimated.View>
+        )}
+        onEndReached={loadMoreWorkouts}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <View style={styles.loadingMore}>
+              <Text style={styles.loadingMoreText}>Loading…</Text>
+            </View>
+          ) : !hasMore && workouts.length > 0 ? (
+            <View style={styles.loadingMore}>
+              <Text style={styles.loadingMoreText}>All workouts loaded</Text>
+            </View>
+          ) : null
+        }
+        contentContainerStyle={styles.listContent}
+      />
+    );
+  }
+
+  // ─── Progress Tab ────────────────────────────────────────────────────────
+
+  function ProgressTab({ unit: pu }: { unit: WeightUnit }) {
+    const [pickerVisible, setPickerVisible] = useState(false);
+    const [selected, setSelected] = useState<{ id: number; name: string } | null>(null);
+    const [chartData, setChartData] = useState<BestSetPerSession[]>([]);
+    const [sessions, setSessions] = useState<ExerciseSession[]>([]);
+    const [pr, setPr] = useState<PRWithName | null>(null);
+
+    const handleSelect = (id: number, name: string) => {
+      setSelected({ id, name });
+      setChartData(getBestSetPerSession(id));
+      setSessions(getExerciseHistory(id, 20));
+      setPr(getPRForExercise(id));
+      setPickerVisible(false);
+    };
+
+    return (
+      <ScrollView style={styles.progressScroll} contentContainerStyle={styles.progressContent}>
+        <Pressable
+          style={({ pressed }) => [styles.exercisePickerBtn, pressed && styles.exercisePickerBtnPressed]}
+          onPress={() => setPickerVisible(true)}
+        >
+          <Ionicons name="barbell-outline" size={18} color={Colors.textSecondary} />
+          <Text style={styles.exercisePickerText} numberOfLines={1}>
+            {selected ? selected.name : 'Select Exercise'}
+          </Text>
+          <Ionicons name="chevron-down" size={16} color={Colors.textTertiary} />
+        </Pressable>
+
+        {selected && (
+          <>
+            <View style={styles.chartCard}>
+              <Text style={styles.chartTitle}>
+                ESTIMATED 1RM PROGRESS ({pu.toUpperCase()})
+              </Text>
+              <ProgressChart data={chartData} unit={pu} />
+            </View>
+
+            {pr && (
+              <View style={styles.prCard}>
+                <Ionicons name="trophy" size={18} color={Colors.primary} />
+                <View style={styles.prCardInfo}>
+                  <Text style={styles.prCardLabel}>Personal Record</Text>
+                  <Text style={styles.prCardValue}>
+                    {kgToDisplay(pr.weight_kg, pu)}{pu} × {pr.reps} reps
+                  </Text>
+                </View>
+                <Text style={styles.prCardEst}>
+                  ~{kgToDisplay(pr.estimated_1rm, pu)} {pu} 1RM
+                </Text>
+              </View>
+            )}
+
+            <Text style={styles.sectionLabel}>SESSION HISTORY</Text>
+
+            {sessions.length === 0 && (
+              <Text style={styles.emptyListHint}>No sessions yet</Text>
+            )}
+
+            {sessions.map((session) => (
+              <View key={session.workoutId} style={styles.sessionCard}>
+                <Text style={styles.sessionDate}>{formatDate(session.date)}</Text>
+                {session.sets.map((s, si) => (
+                  <View key={si} style={styles.sessionSetRow}>
+                    <Text style={styles.sessionSetNum}>Set {si + 1}</Text>
+                    <Text style={styles.sessionSetDetail}>
+                      {kgToDisplay(s.weightKg, pu)}{pu} × {s.reps}
+                    </Text>
+                    <Text style={styles.sessionSetEst}>
+                      ~{kgToDisplay(s.estimated1rm, pu)} {pu}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+
+            <MuscleGroupChart />
+          </>
+        )}
+
+        <ExercisePicker
+          visible={pickerVisible}
+          onSelect={handleSelect}
+          onClose={() => setPickerVisible(false)}
+        />
+      </ScrollView>
+    );
+  }
+
+  // ─── Records Tab ─────────────────────────────────────────────────────────
+
+  function RecordsTab({ unit: ru }: { unit: WeightUnit }) {
+    const prs = useHistoryStore((s) => s.prs);
+
+    if (prs.length === 0) {
+      return (
+        <View style={styles.emptyList}>
+          <Text style={styles.emptyListText}>No personal records yet</Text>
+          <Text style={styles.emptyListHint}>Complete workouts to earn PRs</Text>
+        </View>
+      );
+    }
+
+    const sevenDaysAgo = Date.now() - 7 * 86400000;
+
+    const grouped = new Map<string, PRWithName[]>();
+    for (const pr of prs) {
+      const group = grouped.get(pr.muscleGroup) ?? [];
+      group.push(pr);
+      grouped.set(pr.muscleGroup, group);
+    }
+
+    return (
+      <ScrollView contentContainerStyle={styles.recordsContent}>
+        {Array.from(grouped.entries()).map(([group, groupPRs]) => (
+          <View key={group} style={styles.prGroup}>
+            <Text style={styles.prGroupLabel}>{group.toUpperCase()}</Text>
+            {groupPRs.map((pr) => {
+              const achievedMs = new Date(
+                pr.achieved_at.includes('T') ? pr.achieved_at : pr.achieved_at.replace(' ', 'T') + 'Z'
+              ).getTime();
+              const isRecent = achievedMs > sevenDaysAgo;
+              return (
+                <View key={pr.id} style={[styles.prRow, isRecent && styles.prRowRecent]}>
+                  <View style={styles.prRowLeft}>
+                    <Text style={[styles.prRowName, isRecent && styles.prRowNameRecent]}>
+                      {pr.exerciseName}
+                    </Text>
+                    <Text style={styles.prRowDate}>{formatDateShort(pr.achieved_at)}</Text>
+                  </View>
+                  <View style={styles.prRowRight}>
+                    <Text style={[styles.prRowWeight, isRecent && styles.prRowWeightRecent]}>
+                      {kgToDisplay(pr.weight_kg, ru)}{ru} × {pr.reps}
+                    </Text>
+                    <Text style={styles.prRowEst}>
+                      ~{kgToDisplay(pr.estimated_1rm, ru)} {ru} 1RM
+                    </Text>
+                  </View>
+                  {isRecent && (
+                    <Ionicons name="trophy" size={14} color={Colors.primary} />
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        ))}
+      </ScrollView>
+    );
+  }
+
+  // ─── Water Tab ───────────────────────────────────────────────────────────
+
+  function WaterDayModal({
+    date,
+    onClose,
+  }: {
+    date: string;
+    onClose: () => void;
+  }) {
+    const [entries, setEntries] = useState<WaterEntry[]>([]);
+    const { waterUnit } = useWaterStore();
+
+    useEffect(() => {
+      try {
+        setEntries(getWaterEntriesByDate(date));
+      } catch { }
+    }, [date]);
+
+    function fmtTime(iso: string) {
+      const d = new Date(iso.includes('T') ? iso : iso.replace(' ', 'T'));
+      return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+    }
+
+    return (
+      <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+        <Pressable style={styles.modalBackdrop} onPress={onClose} />
+        <View style={styles.modalSheet}>
+          <Text style={styles.modalTitle}>{date}</Text>
+          {entries.length === 0 ? (
+            <Text style={styles.emptyListHint}>No entries for this day</Text>
+          ) : (
+            entries.map((e) => (
+              <View key={e.id} style={styles.waterModalRow}>
+                <Text style={styles.waterModalTime}>{fmtTime(e.recordedAt)}</Text>
+                <Text style={styles.waterModalAmt}>{formatWater(e.amountMl, waterUnit)}</Text>
+                {e.notes ? <Text style={styles.waterModalNotes}>{e.notes}</Text> : null}
+              </View>
+            ))
+          )}
+          <Pressable style={styles.modalClose} onPress={onClose}>
+            <Text style={styles.modalCloseText}>Close</Text>
+          </Pressable>
+        </View>
+      </Modal>
+    );
+  }
+
+  function WaterHistoryChart({ goalMl }: { goalMl: number }) {
+    const { history, waterUnit } = useWaterStore();
+    const CHART_W = WATER_SCREEN_W - Spacing.lg * 4;
+    const CHART_H2 = 160;
+    const LABEL_H = 24;
+    const BAR_COUNT = Math.min(30, history.length || 1);
+    const BAR_GAP = 2;
+    const BAR_W = (CHART_W - BAR_GAP * (BAR_COUNT - 1)) / BAR_COUNT;
+
+    const end = getLocalDateStr(0);
+    const start = getLocalDateStr(29);
+    const [rangeData, setRangeData] = useState<{ date: string; totalMl: number }[]>([]);
+
+    useEffect(() => {
+      try { setRangeData(getWaterRange(start, end)); } catch { }
+    }, [start, end]);
+
+    const dates = Array.from({ length: 30 }, (_, i) => getLocalDateStr(29 - i));
+    const dataMap = new Map(rangeData.map((d) => [d.date, d.totalMl]));
+    const bars = dates.map((date) => ({ date, totalMl: dataMap.get(date) ?? 0 })).slice(-BAR_COUNT);
+    const maxVal = Math.max(...bars.map((b) => b.totalMl), goalMl, 1);
+    const goalY = CHART_H2 - (goalMl / maxVal) * CHART_H2;
+    const today = getLocalDateStr(0);
+
+    return (
+      <View style={styles.chartCard}>
+        <Text style={styles.chartTitle}>LAST 30 DAYS</Text>
+        <Svg width={CHART_W} height={CHART_H2 + LABEL_H}>
+          {goalMl > 0 && (
+            <SvgLine x1={0} y1={goalY} x2={CHART_W} y2={goalY} stroke={WATER_COLOR} strokeWidth={1} strokeDasharray="4 4" opacity={0.5} />
+          )}
+          {bars.map(({ date, totalMl }, i) => {
+            const barH = (totalMl / maxVal) * CHART_H2;
+            const x = i * (BAR_W + BAR_GAP);
+            const isToday = date === today;
+            const hitsGoal = goalMl > 0 && totalMl >= goalMl;
+            const fill = totalMl === 0 ? Colors.surfaceElevated : hitsGoal ? WATER_COLOR : Colors.textTertiary;
+            const showLabel = i === 0 || i === 14 || i === bars.length - 1;
+            return (
+              <React.Fragment key={date}>
+                <Rect x={x} y={CHART_H2 - barH} width={BAR_W} height={Math.max(barH, 2)} rx={1} fill={fill} opacity={isToday ? 1 : 0.75} />
+                {showLabel && (
+                  <SvgText x={x + BAR_W / 2} y={CHART_H2 + LABEL_H - 4} fill={Colors.textTertiary} fontSize={8} textAnchor="middle">
+                    {date.slice(5)}
+                  </SvgText>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </Svg>
+      </View>
+    );
+  }
+
+  function WaterTab() {
+    const { stats, history, waterUnit, dailyGoalMl, loadHistory, loadStats, loadSettings } = useWaterStore();
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+    useFocusEffect(
+      useCallback(() => {
+        loadSettings();
+        loadHistory();
+        loadStats();
+      }, [loadSettings, loadHistory, loadStats])
+    );
+
+    const statCards = [
+      { label: '7-DAY AVG', value: stats ? formatWater(stats.sevenDayAvg, waterUnit) : '—' },
+      { label: '30-DAY AVG', value: stats ? formatWater(stats.thirtyDayAvg, waterUnit) : '—' },
+      { label: 'BEST DAY', value: stats?.bestDay ? formatWater(stats.bestDay.amount, waterUnit) : '—' },
+      { label: 'STREAK', value: stats ? `${stats.currentStreak}d` : '—' },
+    ];
+
+    return (
+      <ScrollView contentContainerStyle={styles.waterTabContent}>
+        {/* Stats */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {statCards.map((c) => (
+            <View key={c.label} style={styles.waterStatCard}>
+              <Text style={styles.waterStatLabel}>{c.label}</Text>
+              <Text style={styles.waterStatValue}>{c.value}</Text>
+            </View>
+          ))}
+        </ScrollView>
+
+        {/* Chart */}
+        <WaterHistoryChart goalMl={dailyGoalMl} />
+
+        {/* Daily summaries */}
+        <Text style={styles.logHeaderText}>DAILY LOG</Text>
+        {history.length === 0 ? (
+          <View style={styles.emptyList}>
+            <Text style={styles.emptyListText}>No water logged yet</Text>
+          </View>
+        ) : (
+          history.map((day) => {
+            const hitsGoal = dailyGoalMl > 0 && day.totalMl >= dailyGoalMl;
+            return (
+              <Pressable
+                key={day.date}
+                style={({ pressed }) => [styles.waterDayRow, pressed && { opacity: 0.8 }]}
+                onPress={() => setSelectedDate(day.date)}
+              >
+                <View style={[styles.waterDayDot, { backgroundColor: hitsGoal ? Colors.success : Colors.error }]} />
+                <Text style={styles.waterDayDate}>{day.date}</Text>
+                <Text style={styles.waterDayTotal}>{formatWater(day.totalMl, waterUnit)}</Text>
+                <Ionicons name="chevron-forward" size={14} color={Colors.textTertiary} />
+              </Pressable>
+            );
+          })
+        )}
+
+        {selectedDate && (
+          <WaterDayModal date={selectedDate} onClose={() => setSelectedDate(null)} />
+        )}
+      </ScrollView>
+    );
+  }
+
   const [activeTab, setActiveTab] = useState<TabKey>('workouts');
   const [unit, setUnit] = useState<WeightUnit>('kg');
   const loadWorkouts = useHistoryStore((s) => s.loadWorkouts);
@@ -669,344 +1019,3 @@ export default function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.md,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  headerTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-  },
-  tabScrollRow: {
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    flexGrow: 0,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    gap: Spacing.sm,
-  },
-  tabPill: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  tabPillActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  tabText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  tabTextActive: { color: Colors.background },
-  content: { flex: 1 },
-
-  // Workout list
-  listContent: { paddingBottom: Spacing.xxxl },
-  logHeader: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xs,
-  },
-  logHeaderText: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  swipeWrapper: { overflow: 'hidden' },
-  deleteZone: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    right: 0,
-    width: DELETE_WIDTH,
-    backgroundColor: Colors.error,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  deleteAction: { alignItems: 'center', gap: 2 },
-  deleteActionText: {
-    color: Colors.text,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-  },
-  workoutCard: {
-    backgroundColor: Colors.surface,
-    marginHorizontal: Spacing.lg,
-    marginVertical: Spacing.xs,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.xs,
-  },
-  workoutCardPressed: { opacity: 0.85 },
-  cardTitleRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
-  cardDate: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  cardDayName: { color: Colors.textSecondary, fontSize: Typography.size.md },
-  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
-  cardMetaText: { color: Colors.textSecondary, fontSize: Typography.size.sm },
-  cardMetaDot: { color: Colors.textTertiary, fontSize: Typography.size.sm },
-  cardExercises: { color: Colors.textTertiary, fontSize: Typography.size.xs },
-  skeletonContainer: { padding: Spacing.lg, gap: Spacing.sm },
-  emptyList: { alignItems: 'center', paddingTop: Spacing.xxxl, gap: Spacing.sm },
-  emptyListText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semibold,
-  },
-  emptyListHint: { color: Colors.textTertiary, fontSize: Typography.size.sm },
-  loadingMore: { alignItems: 'center', padding: Spacing.lg },
-  loadingMoreText: { color: Colors.textTertiary, fontSize: Typography.size.sm },
-
-  // Progress tab
-  progressScroll: { flex: 1, backgroundColor: Colors.background },
-  progressContent: { padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxxl },
-  exercisePickerBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  exercisePickerBtnPressed: { opacity: 0.85 },
-  exercisePickerText: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  chartCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  chartTitle: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  noData: { height: CHART_H, alignItems: 'center', justifyContent: 'center' },
-  noDataText: { color: Colors.textTertiary, fontSize: Typography.size.sm, textAlign: 'center' },
-  prCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.primaryMuted,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-  },
-  prCardInfo: { flex: 1, gap: 2 },
-  prCardLabel: {
-    color: Colors.primary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  prCardValue: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-  prCardEst: {
-    color: Colors.primary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  sectionLabel: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginTop: Spacing.xs,
-  },
-  sessionCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.xs,
-  },
-  sessionDate: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-    marginBottom: 2,
-  },
-  sessionSetRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  sessionSetNum: { color: Colors.textTertiary, fontSize: Typography.size.xs, width: 36 },
-  sessionSetDetail: { flex: 1, color: Colors.textSecondary, fontSize: Typography.size.sm },
-  sessionSetEst: { color: Colors.textTertiary, fontSize: Typography.size.xs },
-
-  // Records tab
-  recordsContent: { padding: Spacing.lg, gap: Spacing.xl, paddingBottom: Spacing.xxxl },
-  prGroup: { gap: Spacing.sm },
-  prGroupLabel: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  prRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  prRowRecent: { borderColor: Colors.primary, backgroundColor: Colors.primaryMuted },
-  prRowLeft: { flex: 1, gap: 2 },
-  prRowName: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  prRowNameRecent: { color: Colors.primary },
-  prRowDate: { color: Colors.textTertiary, fontSize: Typography.size.xs },
-  prRowRight: { alignItems: 'flex-end', gap: 2 },
-  prRowWeight: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  prRowWeightRecent: { color: Colors.text },
-  prRowEst: { color: Colors.textTertiary, fontSize: Typography.size.xs },
-
-  // Water tab
-  waterTabContent: { padding: Spacing.lg, gap: Spacing.lg, paddingBottom: Spacing.xxxl },
-  waterStatCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    marginRight: Spacing.sm,
-    alignItems: 'center',
-    gap: 4,
-    minWidth: 90,
-  },
-  waterStatLabel: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  waterStatValue: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-  waterDayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  waterDayDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  waterDayDate: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-  waterDayTotal: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-  },
-  waterModalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    gap: Spacing.sm,
-  },
-  waterModalTime: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    width: 60,
-  },
-  waterModalAmt: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-    flex: 1,
-  },
-  waterModalNotes: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-  },
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
-  modalSheet: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    padding: Spacing.xl,
-    paddingBottom: Spacing.xxxl,
-    maxHeight: '60%',
-    borderTopWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.xs,
-  },
-  modalTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    marginBottom: Spacing.sm,
-  },
-  modalClose: {
-    alignItems: 'center',
-    paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  modalCloseText: {
-    color: Colors.primary,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-});

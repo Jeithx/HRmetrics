@@ -507,29 +507,39 @@ function checkDailyVariance(data: InsightData): Insight | null {
 // ─── Water rules ──────────────────────────────────────────────────────────────
 
 function checkHydrationGreat(data: InsightData): Insight | null {
-  if (data.waterEntries.length < 7) return null;
+  if (data.waterEntries.length < 5) return null;
   const last7 = [...data.waterEntries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
   const daysHit = last7.filter((d) => d.totalMl >= data.dailyWaterGoalMl).length;
   if (daysHit < 5) return null;
+  const avgMl = Math.round(last7.reduce((s, d) => s + d.totalMl, 0) / last7.length);
+  const overPct = Math.round((avgMl / data.dailyWaterGoalMl - 1) * 100);
   return {
     id: 'HYDRATION_GREAT',
     category: 'water',
     priority: 2,
     icon: '💧',
     title: 'Great Hydration',
-    message: pick([
-      `Solid hydration week. ${daysHit}/7 days hitting your goal.`,
-      `Your kidneys are very happy with you right now.`,
-    ]),
+    message: overPct > 15
+      ? pick([
+        `${daysHit}/7 days over goal, averaging ${avgMl}ml. Hydration is dialed in.`,
+        `${avgMl}ml average this week — ${overPct}% over goal. Your body is thanking you.`,
+      ])
+      : pick([
+        `${daysHit}/7 days hitting your water goal. Consistency > perfection.`,
+        `Solid hydration discipline this week. Keep it up.`,
+      ]),
     generatedAt: new Date().toISOString(),
   };
 }
 
 function checkHydrationPoor(data: InsightData): Insight | null {
-  if (data.waterEntries.length < 7) return null;
+  if (data.waterEntries.length < 3) return null;
   const last7 = [...data.waterEntries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
   const daysHit = last7.filter((d) => d.totalMl >= data.dailyWaterGoalMl).length;
   if (daysHit > 2) return null;
+  const avgMl = Math.round(last7.reduce((s, d) => s + d.totalMl, 0) / last7.length);
+  const deficit = data.dailyWaterGoalMl - avgMl;
+  const bestDay = last7.reduce((a, b) => a.totalMl > b.totalMl ? a : b);
   return {
     id: 'HYDRATION_POOR',
     category: 'water',
@@ -537,8 +547,9 @@ function checkHydrationPoor(data: InsightData): Insight | null {
     icon: '🏜️',
     title: 'Hydration Low',
     message: pick([
-      `Hydration's been off this week. Even 500ml more per day makes a difference.`,
-      `Low water intake this week. Dehydration tanks performance — worth fixing.`,
+      `Averaging ${avgMl}ml/day — ${deficit}ml short of your goal. A glass with each meal gets you halfway there.`,
+      `${daysHit}/7 days hitting your goal this week. Your best was ${bestDay.totalMl}ml — use that as your floor.`,
+      `Low water intake is silently dragging your performance. Even +500ml/day makes a difference.`,
     ]),
     actionLabel: 'Log Water',
     actionRoute: '/water',
@@ -548,24 +559,61 @@ function checkHydrationPoor(data: InsightData): Insight | null {
 
 function checkHydrationTodayBehind(data: InsightData): Insight | null {
   const hour = new Date().getHours();
-  if (hour < 14) return null;
+  // Too early (< 10:00) or too late (≥ 21:00) to give actionable water advice
+  if (hour < 10 || hour >= 21) return null;
+
   const todayDate = new Date().toISOString().slice(0, 10);
   const sorted = [...data.waterEntries].sort((a, b) => b.date.localeCompare(a.date));
-  const todayEntry = sorted[0];
-  const todayMl = todayEntry?.date === todayDate ? todayEntry.totalMl : 0;
-  if (todayMl >= data.dailyWaterGoalMl * 0.4) return null;
+  const todayMl = sorted[0]?.date === todayDate ? sorted[0].totalMl : 0;
+  const goal = data.dailyWaterGoalMl;
 
-  const remaining = data.dailyWaterGoalMl - todayMl;
+  if (todayMl >= goal) return null;
+
+  // Expected intake by this point in the day (assume 7:00–22:00 window = 15h)
+  const dayProgress = Math.min(1, Math.max(0, (hour - 7) / 15));
+  const expectedByNow = goal * dayProgress;
+  // Only fire if more than 35% behind the expected pace
+  if (todayMl >= expectedByNow * 0.65) return null;
+
+  const remaining = goal - todayMl;
+  // Hours left in the day assuming stop at 22:00
+  const hoursLeft = Math.max(1, 22 - hour);
+  const mlPerHour = Math.round(remaining / hoursLeft);
+
+  // Goal is physically unrealistic (> 600ml/hour) — don't nag, just note it
+  if (mlPerHour > 600) {
+    return {
+      id: 'HYDRATION_TODAY_BEHIND',
+      category: 'water',
+      priority: 3,
+      icon: '💧',
+      title: 'Low Water Today',
+      message: pick([
+        `${todayMl}ml today — goal's out of reach now, but every glass still counts. Start strong tomorrow.`,
+        `Won't hit the goal today (${todayMl}ml so far). Set a reminder for first thing in the morning.`,
+      ]),
+      actionLabel: 'Log Water',
+      actionRoute: '/water',
+      generatedAt: new Date().toISOString(),
+    };
+  }
+
+  const glassesPerHour = Math.round(mlPerHour / 250);
   return {
     id: 'HYDRATION_TODAY_BEHIND',
     category: 'water',
     priority: 2,
     icon: '⏰',
     title: 'Behind on Water',
-    message: pick([
-      `It's ${hour}:00 and you're at ${todayMl}ml. Drink a big glass right now.`,
-      `Behind on water today. ${remaining}ml to go before end of day.`,
-    ]),
+    message: glassesPerHour <= 1
+      ? pick([
+        `${todayMl}ml so far. About ${mlPerHour}ml/hour will get you to your goal — basically a glass every hour.`,
+        `You're ${remaining}ml short with ${hoursLeft}h left. One glass per hour and you're there.`,
+      ])
+      : pick([
+        `${todayMl}ml so far. You need ~${mlPerHour}ml/hour — ${glassesPerHour} glasses per hour — to hit your goal.`,
+        `${remaining}ml to go in ${hoursLeft}h. That's ${glassesPerHour} glasses per hour. Doable but you need to start now.`,
+      ]),
     actionLabel: 'Log Water',
     actionRoute: '/water',
     generatedAt: new Date().toISOString(),
@@ -579,14 +627,22 @@ function checkWaterStreak(data: InsightData): Insight | null {
     if (entry.totalMl >= data.dailyWaterGoalMl) streak++;
     else break;
   }
-  if (streak < 7) return null;
+  if (streak < 5) return null;
+  const avgMl = Math.round(
+    sorted.slice(0, streak).reduce((s, e) => s + e.totalMl, 0) / streak
+  );
   return {
     id: 'WATER_STREAK',
     category: 'water',
-    priority: 2,
+    priority: streak >= 14 ? 1 : 2,
     icon: '🌊',
-    title: 'Hydration Streak',
-    message: `${streak} days hitting your water goal. Hydration habit: locked in.`,
+    title: streak >= 14 ? `${streak}-Day Hydration Streak` : 'Hydration Streak',
+    message: streak >= 14
+      ? `${streak} days straight hitting your water goal, averaging ${avgMl}ml. That's a real habit.`
+      : pick([
+        `${streak} days at your water goal, averaging ${avgMl}ml/day. Hydration habit is forming.`,
+        `${streak}-day streak. Consistent hydration compounds — keep it going.`,
+      ]),
     generatedAt: new Date().toISOString(),
   };
 }

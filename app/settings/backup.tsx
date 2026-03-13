@@ -34,6 +34,211 @@ function formatDate(iso: string): string {
 }
 
 export default function BackupScreen() {
+  const styles = StyleSheet.create({
+    root: { flex: 1, backgroundColor: Colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: Spacing.md,
+      paddingTop: Spacing.xxxl,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+    },
+    headerSide: { width: 40, alignItems: 'center' },
+    headerTitle: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+      textAlign: 'center',
+    },
+    content: {
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.lg,
+      paddingBottom: Spacing.xxxl,
+      gap: Spacing.sm,
+    },
+    sectionHeader: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+      marginTop: Spacing.lg,
+      marginBottom: Spacing.xs,
+    },
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      padding: Spacing.lg,
+      gap: Spacing.md,
+    },
+    descText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      lineHeight: 20,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    infoLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    infoValue: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.medium,
+    },
+    primaryBtn: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.md,
+      alignItems: 'center',
+      minHeight: 48,
+      justifyContent: 'center',
+    },
+    primaryBtnText: {
+      color: Colors.background,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+    outlineBtn: {
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.md,
+      alignItems: 'center',
+      minHeight: 48,
+      justifyContent: 'center',
+    },
+    outlineBtnText: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    btnDisabled: { opacity: 0.5 },
+    btnPressed: { opacity: 0.75 },
+    warningCard: {
+      backgroundColor: '#3D2E00',
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: '#7A5C00',
+      padding: Spacing.md,
+    },
+    warningText: {
+      color: '#FFD60A',
+      fontSize: Typography.size.sm,
+      lineHeight: 20,
+    },
+    tipCard: {
+      marginTop: Spacing.lg,
+      padding: Spacing.lg,
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    tipText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      lineHeight: 20,
+      textAlign: 'center',
+      fontStyle: 'italic',
+    },
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+    },
+    sheet: {
+      backgroundColor: Colors.surface,
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      paddingHorizontal: Spacing.xl,
+      paddingTop: Spacing.xl,
+      paddingBottom: Spacing.xxxl,
+      gap: Spacing.md,
+    },
+    sheetTitle: {
+      color: Colors.text,
+      fontSize: Typography.size.xl,
+      fontWeight: Typography.weight.bold,
+      textAlign: 'center',
+    },
+    sheetMeta: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+    },
+    statsRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      marginVertical: Spacing.xs,
+    },
+    statChip: {
+      flex: 1,
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      paddingVertical: Spacing.sm,
+      alignItems: 'center',
+      gap: 2,
+    },
+    statNumber: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+    },
+    statLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+    },
+    sheetWarning: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      textAlign: 'center',
+    },
+    sheetButtons: {
+      flexDirection: 'row',
+      gap: Spacing.md,
+      marginTop: Spacing.sm,
+    },
+    cancelBtn: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.md,
+      alignItems: 'center',
+    },
+    cancelBtnText: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+    },
+    restoreBtn: {
+      flex: 1,
+      backgroundColor: Colors.error,
+      borderRadius: BorderRadius.md,
+      paddingVertical: Spacing.md,
+      alignItems: 'center',
+    },
+    restoreBtnText: {
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+  });
+
   const [lastBackupDate, setLastBackupDate] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -295,220 +500,3 @@ export default function BackupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: Colors.background },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.xxxl,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  headerSide: { width: 40, alignItems: 'center' },
-  headerTitle: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    textAlign: 'center',
-  },
-
-  content: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.sm,
-  },
-
-  sectionHeader: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xs,
-  },
-
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.lg,
-    gap: Spacing.md,
-  },
-
-  descText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
-  },
-
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  infoLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  infoValue: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-
-  primaryBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    minHeight: 48,
-    justifyContent: 'center',
-  },
-  primaryBtnText: {
-    color: Colors.background,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-
-  outlineBtn: {
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    minHeight: 48,
-    justifyContent: 'center',
-  },
-  outlineBtnText: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-
-  btnDisabled: { opacity: 0.5 },
-  btnPressed: { opacity: 0.75 },
-
-  warningCard: {
-    backgroundColor: '#3D2E00',
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: '#7A5C00',
-    padding: Spacing.md,
-  },
-  warningText: {
-    color: '#FFD60A',
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
-  },
-
-  tipCard: {
-    marginTop: Spacing.lg,
-    padding: Spacing.lg,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  tipText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    lineHeight: 20,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-
-  // ── Confirm sheet ──
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  sheet: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.md,
-  },
-  sheetTitle: {
-    color: Colors.text,
-    fontSize: Typography.size.xl,
-    fontWeight: Typography.weight.bold,
-    textAlign: 'center',
-  },
-  sheetMeta: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginVertical: Spacing.xs,
-  },
-  statChip: {
-    flex: 1,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    paddingVertical: Spacing.sm,
-    alignItems: 'center',
-    gap: 2,
-  },
-  statNumber: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-  },
-  statLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-  },
-  sheetWarning: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    textAlign: 'center',
-  },
-  sheetButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.sm,
-  },
-  cancelBtn: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-  },
-  cancelBtnText: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-  },
-  restoreBtn: {
-    flex: 1,
-    backgroundColor: Colors.error,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-  },
-  restoreBtnText: {
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-});

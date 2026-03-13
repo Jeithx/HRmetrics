@@ -1,7 +1,8 @@
 export const PRODUCT_IDS = {
-  PRE_WORKOUT: 'com.jeithx.replogger.support_tier1',
-  CHICKEN_RICE: 'com.jeithx.replogger.support_tier2',
-  CHEAT_MEAL: 'com.jeithx.replogger.support_tier3',
+  PRE_WORKOUT: 'com.jeithx.hrmetrics.support_tier1',
+  CHICKEN_RICE: 'com.jeithx.hrmetrics.support_tier2',
+  CHEAT_MEAL: 'com.jeithx.hrmetrics.support_tier3',
+  MASS_GAINER: 'com.jeithx.hrmetrics.support_tier4',
 } as const;
 
 export interface TierPerk {
@@ -68,6 +69,24 @@ export const SUPPORTER_TIERS: TierPerk[] = [
     badge: '👑',
     badgeLabel: 'Cheat Meal Legend',
   },
+  {
+    id: 'MASS_GAINER',
+    productId: PRODUCT_IDS.MASS_GAINER,
+    name: 'Mass Gainer',
+    price: '₺999',
+    emoji: '🏋️',
+    tagline: "Buy the dev a full semester's worth of protein",
+    description: 'The absolute unit tier.',
+    perks: [
+      'Everything in Cheat Meal',
+      'Exclusive "Obsidian Gold" theme',
+      '"Absolute Unit" lifter title',
+      'Name in the app credits (coming soon)',
+      'Undying gratitude from a CS student',
+    ],
+    badge: '💎',
+    badgeLabel: 'Absolute Unit',
+  },
 ];
 
 export interface LifterTitle {
@@ -83,6 +102,7 @@ export const LIFTER_TITLES: LifterTitle[] = [
   { id: 'preworkout_prophet',  label: 'Pre-Workout Prophet', emoji: '⚡' },
   { id: 'chicken_rice_chad',   label: 'Chicken Rice Chad',   emoji: '🍗' },
   { id: 'cheat_meal_legend',   label: 'Cheat Meal Legend',   emoji: '🍿' },
+  { id: 'absolute_unit',       label: 'Absolute Unit',       emoji: '🏋️' },
 ];
 
 export interface SupporterTheme {
@@ -123,10 +143,24 @@ export const SUPPORTER_THEMES: SupporterTheme[] = [
       border: '#25252D',
     },
   },
+  {
+    id: 'obsidian_gold',
+    name: 'Obsidian Gold',
+    description: 'Mass Gainer exclusive — deep black with gold',
+    colors: {
+      background: '#0A0800',
+      surface: '#141000',
+      surfaceElevated: '#1E1800',
+      primary: '#FFB800',
+      border: '#2A2200',
+    },
+    exclusiveTier: 'MASS_GAINER',
+  } as SupporterTheme & { exclusiveTier: string },
 ];
 
 export const TIER_MESSAGES: Record<string, string> = {
   PRE_WORKOUT: 'Thanks for the energy drink. Seriously, it means a lot.',
   CHICKEN_RICE: "Chicken & rice secured. You're a Founding Bro now — that title is permanent.",
   CHEAT_MEAL: 'Korean popcorn chicken incoming 🍿 You\'re a legend.',
+  MASS_GAINER: "A full semester's worth of protein. You're an Absolute Unit and I mean that. 🏋️",
 };

@@ -13,6 +13,7 @@ import Reanimated, {
 import * as Haptics from 'expo-haptics';
 import { BorderRadius, Colors, Spacing, Typography } from '../constants/theme';
 import { showRestTimerNotification, dismissRestTimerNotification } from '../utils/notificationService';
+import { getSetting } from '../db/settingsQueries';
 
 const AnimatedCircle = Reanimated.createAnimatedComponent(Circle);
 
@@ -117,7 +118,9 @@ export default function RestTimer({ visible, durationSeconds = 90, onDismiss }: 
         // App going to background — show notification
         if (intervalRef.current) clearInterval(intervalRef.current);
         cancelAnimation(dashOffset);
-        showRestTimerNotification(restEndTimeRef.current).catch(() => { });
+        if (getSetting('workout_active_notification_enabled') !== '0') {
+          showRestTimerNotification(restEndTimeRef.current).catch(() => { });
+        }
       } else if (prev !== 'active' && nextState === 'active') {
         // App returning to foreground — resume
         dismissRestTimerNotification().catch(() => { });
@@ -144,6 +147,69 @@ export default function RestTimer({ visible, durationSeconds = 90, onDismiss }: 
 
   const ringColor =
     remaining === 0 ? Colors.success : remaining <= 10 ? Colors.error : Colors.primary;
+
+  const styles = StyleSheet.create({
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.75)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 100,
+    },
+    card: {
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.xl,
+      padding: Spacing.xxl,
+      alignItems: 'center',
+      width: 240,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    label: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+      marginBottom: Spacing.lg,
+    },
+    ringWrapper: {
+      width: RING_SIZE,
+      height: RING_SIZE,
+      marginBottom: Spacing.xl,
+    },
+    countdownOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    countdown: {
+      color: Colors.text,
+      fontSize: Typography.size.xxxl,
+      fontWeight: Typography.weight.bold,
+    },
+    countdownDone: {
+      color: Colors.success,
+    },
+    countdownWarning: {
+      color: Colors.error,
+    },
+    skipButton: {
+      paddingHorizontal: Spacing.xl,
+      paddingVertical: Spacing.sm,
+      borderRadius: BorderRadius.full,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    skipButtonPressed: {
+      backgroundColor: Colors.surface,
+    },
+    skipText: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.medium,
+    },
+  });
 
   return (
     <Reanimated.View style={[styles.overlay, overlayStyle]}>
@@ -202,65 +268,3 @@ export default function RestTimer({ visible, durationSeconds = 90, onDismiss }: 
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 100,
-  },
-  card: {
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xxl,
-    alignItems: 'center',
-    width: 240,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  label: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: Spacing.lg,
-  },
-  ringWrapper: {
-    width: RING_SIZE,
-    height: RING_SIZE,
-    marginBottom: Spacing.xl,
-  },
-  countdownOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  countdown: {
-    color: Colors.text,
-    fontSize: Typography.size.xxxl,
-    fontWeight: Typography.weight.bold,
-  },
-  countdownDone: {
-    color: Colors.success,
-  },
-  countdownWarning: {
-    color: Colors.error,
-  },
-  skipButton: {
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  skipButtonPressed: {
-    backgroundColor: Colors.surface,
-  },
-  skipText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-});

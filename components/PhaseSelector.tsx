@@ -45,6 +45,95 @@ export default function PhaseSelector({
   onConfirm,
   onClose,
 }: PhaseSelectorProps) {
+  const styles = StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+    },
+    sheet: {
+      backgroundColor: Colors.surface,
+      borderTopLeftRadius: BorderRadius.xl,
+      borderTopRightRadius: BorderRadius.xl,
+      padding: Spacing.lg,
+      paddingBottom: Spacing.xxxl,
+      gap: Spacing.md,
+      borderTopWidth: 1,
+      borderColor: Colors.border,
+    },
+    handle: {
+      alignSelf: 'center',
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: Colors.textTertiary,
+      marginBottom: Spacing.xs,
+    },
+    title: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.bold,
+      textAlign: 'center',
+    },
+    phaseCards: {
+      flexDirection: 'row',
+      gap: Spacing.sm,
+    },
+    phaseCard: {
+      flex: 1,
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      alignItems: 'center',
+      gap: Spacing.xs,
+      borderWidth: 2,
+      borderColor: Colors.border,
+    },
+    phaseIcon: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+    },
+    phaseLabel: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: 0.5,
+    },
+    phaseDesc: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      textAlign: 'center',
+    },
+    inputLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.medium,
+    },
+    goalInput: {
+      backgroundColor: Colors.surfaceElevated,
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    confirmBtn: {
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.md,
+      alignItems: 'center',
+      marginTop: Spacing.xs,
+    },
+    confirmBtnPressed: { opacity: 0.85 },
+    confirmText: {
+      color: Colors.background,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.bold,
+    },
+  });
+
   const [selected, setSelected] = useState<WorkoutPhase | ''>(currentPhase ?? '');
   const [goalInput, setGoalInput] = useState(
     currentGoalWeight != null ? String(currentGoalWeight) : ''
@@ -107,91 +196,3 @@ export default function PhaseSelector({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  sheet: {
-    backgroundColor: Colors.surface,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxxl,
-    gap: Spacing.md,
-    borderTopWidth: 1,
-    borderColor: Colors.border,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: Colors.textTertiary,
-    marginBottom: Spacing.xs,
-  },
-  title: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.bold,
-    textAlign: 'center',
-  },
-  phaseCards: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  phaseCard: {
-    flex: 1,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    alignItems: 'center',
-    gap: Spacing.xs,
-    borderWidth: 2,
-    borderColor: Colors.border,
-  },
-  phaseIcon: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-  },
-  phaseLabel: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 0.5,
-  },
-  phaseDesc: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    textAlign: 'center',
-  },
-  inputLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.medium,
-  },
-  goalInput: {
-    backgroundColor: Colors.surfaceElevated,
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  confirmBtn: {
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-    alignItems: 'center',
-    marginTop: Spacing.xs,
-  },
-  confirmBtnPressed: { opacity: 0.85 },
-  confirmText: {
-    color: Colors.background,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.bold,
-  },
-});

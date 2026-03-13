@@ -10,14 +10,38 @@ import Animated, {
 import { useToastStore, ToastType } from '../store/useToastStore';
 import { BorderRadius, Colors, Spacing, Typography } from '../constants/theme';
 
-const TYPE_BG: Record<ToastType, string> = {
-  success: Colors.success,
-  error: Colors.error,
-  info: '#4488FF',
-};
-
 export default function Toast() {
   const { visible, message, type, hideToast } = useToastStore();
+
+  const TYPE_BG: Record<ToastType, string> = {
+    success: Colors.success,
+    error: Colors.error,
+    info: '#4488FF',
+  };
+
+  const styles = StyleSheet.create({
+    container: {
+      position: 'absolute',
+      bottom: 72,
+      left: Spacing.lg,
+      right: Spacing.lg,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.md,
+      paddingHorizontal: Spacing.lg,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+      zIndex: 999,
+    },
+    text: {
+      color: Colors.background,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+      textAlign: 'center',
+    },
+  });
   const translateY = useSharedValue(80);
   const opacity = useSharedValue(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -57,26 +81,3 @@ export default function Toast() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 72,
-    left: Spacing.lg,
-    right: Spacing.lg,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    zIndex: 999,
-  },
-  text: {
-    color: Colors.background,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-    textAlign: 'center',
-  },
-});

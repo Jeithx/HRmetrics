@@ -95,6 +95,9 @@ export default function NotificationSettingsScreen() {
     const [showWaterStartPicker, setShowWaterStartPicker] = useState(false);
     const [showWaterEndPicker, setShowWaterEndPicker] = useState(false);
 
+    // Active workout notification
+    const [activeWorkoutNotifEnabled, setActiveWorkoutNotifEnabled] = useState(true);
+
     // Weight
     const [weightEnabled, setWeightEnabled] = useState(false);
     const [weightHour, setWeightHour] = useState(8);
@@ -109,6 +112,9 @@ export default function NotificationSettingsScreen() {
                 const granted = await checkPermissions();
                 setPermGranted(granted);
             })();
+
+            // Active workout notification
+            setActiveWorkoutNotifEnabled(getSetting('workout_active_notification_enabled') !== '0');
 
             // Workout
             const wEnabled = getSetting('workout_reminder_enabled');
@@ -283,7 +289,218 @@ export default function NotificationSettingsScreen() {
         }
     };
 
+    // Active workout notification
+    const handleActiveWorkoutNotifToggle = (val: boolean) => {
+        setActiveWorkoutNotifEnabled(val);
+        setSetting('workout_active_notification_enabled', val ? '1' : '0');
+    };
+
     // ── Render ───────────────────────────────────────────────────────────────
+
+    const styles = StyleSheet.create({
+        container: { flex: 1, backgroundColor: Colors.background },
+        content: {
+            paddingHorizontal: Spacing.lg,
+            paddingTop: Spacing.xxxl,
+            paddingBottom: Spacing.xxxl,
+            gap: Spacing.sm,
+        },
+        backRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: Spacing.xs,
+            marginBottom: Spacing.sm,
+        },
+        backText: {
+            color: Colors.primary,
+            fontSize: Typography.size.md,
+            fontWeight: Typography.weight.medium,
+        },
+        pageTitle: {
+            color: Colors.text,
+            fontSize: Typography.size.xxl,
+            fontWeight: Typography.weight.bold,
+            letterSpacing: -0.5,
+            marginBottom: Spacing.md,
+        },
+
+        // Warning banner
+        warningCard: {
+            backgroundColor: '#3B3200',
+            borderRadius: BorderRadius.lg,
+            borderWidth: 1,
+            borderColor: '#665800',
+            padding: Spacing.lg,
+            gap: Spacing.md,
+            marginBottom: Spacing.sm,
+        },
+        warningText: {
+            color: '#FFD600',
+            fontSize: Typography.size.sm,
+            fontWeight: Typography.weight.medium,
+            lineHeight: Typography.size.sm * Typography.lineHeight.normal,
+        },
+        warningButton: {
+            alignSelf: 'flex-start',
+            backgroundColor: '#FFD600',
+            borderRadius: BorderRadius.md,
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.sm,
+        },
+        warningButtonText: {
+            color: '#1A1A00',
+            fontSize: Typography.size.sm,
+            fontWeight: Typography.weight.bold,
+        },
+
+        // Sections
+        sectionHeader: {
+            color: Colors.textTertiary,
+            fontSize: Typography.size.xs,
+            fontWeight: Typography.weight.semibold,
+            textTransform: 'uppercase',
+            letterSpacing: 0.8,
+            marginTop: Spacing.lg,
+            marginBottom: Spacing.xs,
+        },
+        card: {
+            backgroundColor: Colors.surface,
+            borderRadius: BorderRadius.lg,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            overflow: 'hidden',
+        },
+        toggleRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.md,
+            minHeight: 52,
+        },
+        settingsRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.md,
+            minHeight: 52,
+            gap: Spacing.md,
+        },
+        rowLabel: {
+            flex: 1,
+            color: Colors.text,
+            fontSize: Typography.size.md,
+            fontWeight: Typography.weight.medium,
+        },
+        divider: {
+            height: 1,
+            backgroundColor: Colors.border,
+            marginHorizontal: Spacing.lg,
+        },
+
+        // Time values
+        timeValue: {
+            color: Colors.primary,
+            fontSize: Typography.size.md,
+            fontWeight: Typography.weight.bold,
+        },
+
+        // Day pills
+        dayRow: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: Spacing.xs,
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.md,
+        },
+        dayPill: {
+            paddingHorizontal: Spacing.sm + 2,
+            paddingVertical: Spacing.xs + 2,
+            borderRadius: BorderRadius.md,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            backgroundColor: Colors.surfaceElevated,
+        },
+        dayPillActive: {
+            backgroundColor: Colors.primary,
+            borderColor: Colors.primary,
+        },
+        dayPillText: {
+            color: Colors.textSecondary,
+            fontSize: Typography.size.sm,
+            fontWeight: Typography.weight.semibold,
+        },
+        dayPillTextActive: {
+            color: Colors.background,
+        },
+
+        // Segment control
+        segmentGroup: {
+            flexDirection: 'row',
+            gap: Spacing.xs,
+        },
+        segmentPill: {
+            paddingHorizontal: Spacing.md,
+            paddingVertical: Spacing.xs + 2,
+            borderRadius: BorderRadius.md,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            backgroundColor: Colors.surfaceElevated,
+        },
+        segmentPillActive: {
+            backgroundColor: Colors.primary,
+            borderColor: Colors.primary,
+        },
+        segmentText: {
+            color: Colors.textSecondary,
+            fontSize: Typography.size.sm,
+            fontWeight: Typography.weight.semibold,
+        },
+        segmentTextActive: {
+            color: Colors.background,
+        },
+
+        // Time range
+        timeRangeRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: Spacing.sm,
+        },
+        timeBadge: {
+            backgroundColor: Colors.surfaceElevated,
+            borderRadius: BorderRadius.md,
+            borderWidth: 1,
+            borderColor: Colors.border,
+            paddingHorizontal: Spacing.md,
+            paddingVertical: Spacing.xs + 2,
+        },
+        timeBadgeText: {
+            color: Colors.primary,
+            fontSize: Typography.size.sm,
+            fontWeight: Typography.weight.bold,
+        },
+        timeSeparator: {
+            color: Colors.textSecondary,
+            fontSize: Typography.size.md,
+        },
+
+        // Summary / helper
+        summaryRow: {
+            paddingHorizontal: Spacing.lg,
+            paddingVertical: Spacing.md,
+        },
+        helperText: {
+            color: Colors.textSecondary,
+            fontSize: Typography.size.sm,
+            lineHeight: Typography.size.sm * Typography.lineHeight.normal,
+        },
+        cancelledText: {
+            color: Colors.textTertiary,
+            fontSize: Typography.size.sm,
+            fontStyle: 'italic',
+        },
+    });
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -538,213 +755,25 @@ export default function NotificationSettingsScreen() {
                     </View>
                 )}
             </View>
+            {/* ── Active Workout ──────────────────────────────────────────────── */}
+            <Text style={styles.sectionHeader}>ACTIVE WORKOUT</Text>
+            <View style={styles.card}>
+                <View style={styles.toggleRow}>
+                    <Text style={styles.rowLabel}>Ongoing notification</Text>
+                    <Switch
+                        value={activeWorkoutNotifEnabled}
+                        onValueChange={handleActiveWorkoutNotifToggle}
+                        trackColor={{ false: Colors.surfaceElevated, true: Colors.primary }}
+                        thumbColor={Colors.text}
+                    />
+                </View>
+                <View style={styles.summaryRow}>
+                    <Text style={styles.helperText}>
+                        Shows a persistent notification with a timer while a workout is in progress. Also controls rest timer notifications.
+                    </Text>
+                </View>
+            </View>
         </ScrollView>
     );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Colors.background },
-    content: {
-        paddingHorizontal: Spacing.lg,
-        paddingTop: Spacing.xxxl,
-        paddingBottom: Spacing.xxxl,
-        gap: Spacing.sm,
-    },
-    backRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: Spacing.xs,
-        marginBottom: Spacing.sm,
-    },
-    backText: {
-        color: Colors.primary,
-        fontSize: Typography.size.md,
-        fontWeight: Typography.weight.medium,
-    },
-    pageTitle: {
-        color: Colors.text,
-        fontSize: Typography.size.xxl,
-        fontWeight: Typography.weight.bold,
-        letterSpacing: -0.5,
-        marginBottom: Spacing.md,
-    },
-
-    // Warning banner
-    warningCard: {
-        backgroundColor: '#3B3200',
-        borderRadius: BorderRadius.lg,
-        borderWidth: 1,
-        borderColor: '#665800',
-        padding: Spacing.lg,
-        gap: Spacing.md,
-        marginBottom: Spacing.sm,
-    },
-    warningText: {
-        color: '#FFD600',
-        fontSize: Typography.size.sm,
-        fontWeight: Typography.weight.medium,
-        lineHeight: Typography.size.sm * Typography.lineHeight.normal,
-    },
-    warningButton: {
-        alignSelf: 'flex-start',
-        backgroundColor: '#FFD600',
-        borderRadius: BorderRadius.md,
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.sm,
-    },
-    warningButtonText: {
-        color: '#1A1A00',
-        fontSize: Typography.size.sm,
-        fontWeight: Typography.weight.bold,
-    },
-
-    // Sections
-    sectionHeader: {
-        color: Colors.textTertiary,
-        fontSize: Typography.size.xs,
-        fontWeight: Typography.weight.semibold,
-        textTransform: 'uppercase',
-        letterSpacing: 0.8,
-        marginTop: Spacing.lg,
-        marginBottom: Spacing.xs,
-    },
-    card: {
-        backgroundColor: Colors.surface,
-        borderRadius: BorderRadius.lg,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        overflow: 'hidden',
-    },
-    toggleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md,
-        minHeight: 52,
-    },
-    settingsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md,
-        minHeight: 52,
-        gap: Spacing.md,
-    },
-    rowLabel: {
-        flex: 1,
-        color: Colors.text,
-        fontSize: Typography.size.md,
-        fontWeight: Typography.weight.medium,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: Colors.border,
-        marginHorizontal: Spacing.lg,
-    },
-
-    // Time values
-    timeValue: {
-        color: Colors.primary,
-        fontSize: Typography.size.md,
-        fontWeight: Typography.weight.bold,
-    },
-
-    // Day pills
-    dayRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: Spacing.xs,
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md,
-    },
-    dayPill: {
-        paddingHorizontal: Spacing.sm + 2,
-        paddingVertical: Spacing.xs + 2,
-        borderRadius: BorderRadius.md,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        backgroundColor: Colors.surfaceElevated,
-    },
-    dayPillActive: {
-        backgroundColor: Colors.primary,
-        borderColor: Colors.primary,
-    },
-    dayPillText: {
-        color: Colors.textSecondary,
-        fontSize: Typography.size.sm,
-        fontWeight: Typography.weight.semibold,
-    },
-    dayPillTextActive: {
-        color: Colors.background,
-    },
-
-    // Segment control
-    segmentGroup: {
-        flexDirection: 'row',
-        gap: Spacing.xs,
-    },
-    segmentPill: {
-        paddingHorizontal: Spacing.md,
-        paddingVertical: Spacing.xs + 2,
-        borderRadius: BorderRadius.md,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        backgroundColor: Colors.surfaceElevated,
-    },
-    segmentPillActive: {
-        backgroundColor: Colors.primary,
-        borderColor: Colors.primary,
-    },
-    segmentText: {
-        color: Colors.textSecondary,
-        fontSize: Typography.size.sm,
-        fontWeight: Typography.weight.semibold,
-    },
-    segmentTextActive: {
-        color: Colors.background,
-    },
-
-    // Time range
-    timeRangeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: Spacing.sm,
-    },
-    timeBadge: {
-        backgroundColor: Colors.surfaceElevated,
-        borderRadius: BorderRadius.md,
-        borderWidth: 1,
-        borderColor: Colors.border,
-        paddingHorizontal: Spacing.md,
-        paddingVertical: Spacing.xs + 2,
-    },
-    timeBadgeText: {
-        color: Colors.primary,
-        fontSize: Typography.size.sm,
-        fontWeight: Typography.weight.bold,
-    },
-    timeSeparator: {
-        color: Colors.textSecondary,
-        fontSize: Typography.size.md,
-    },
-
-    // Summary / helper
-    summaryRow: {
-        paddingHorizontal: Spacing.lg,
-        paddingVertical: Spacing.md,
-    },
-    helperText: {
-        color: Colors.textSecondary,
-        fontSize: Typography.size.sm,
-        lineHeight: Typography.size.sm * Typography.lineHeight.normal,
-    },
-    cancelledText: {
-        color: Colors.textTertiary,
-        fontSize: Typography.size.sm,
-        fontStyle: 'italic',
-    },
-});

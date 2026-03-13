@@ -111,10 +111,15 @@ function AppContent() {
   );
 }
 
+function AppKeyWrapper() {
+  const { themeKey } = useTheme();
+  return <AppContent key={themeKey} />;
+}
+
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <AppContent />
+      <AppKeyWrapper />
     </ThemeProvider>
   );
 }

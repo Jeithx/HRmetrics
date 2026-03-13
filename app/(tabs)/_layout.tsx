@@ -65,10 +65,15 @@ export default function TabLayout() {
         },
         tabBarActiveTintColor: Colors.primary,
         tabBarInactiveTintColor: Colors.textSecondary,
-        tabBarShowLabel: false,
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '500',
+          marginTop: 2,
+        },
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',
+          gap: 0,
         },
       }}
     >

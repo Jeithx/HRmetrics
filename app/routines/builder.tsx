@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Alert,
   Pressable,
@@ -26,6 +26,7 @@ interface DayEntry {
 // ─── Step indicator ────────────────────────────────────────────────────────
 
 function StepIndicator({ current, total }: { current: number; total: number }) {
+  const styles = useMemo(createStyles, []);
   return (
     <View style={styles.stepRow}>
       {Array.from({ length: total }, (_, i) => (
@@ -49,6 +50,7 @@ function TemplateCard({
   selected: boolean;
   onSelect: () => void;
 }) {
+  const styles = useMemo(createStyles, []);
   const isBlank = template === null;
   return (
     <Pressable
@@ -65,7 +67,163 @@ function TemplateCard({
   );
 }
 
+function createStyles() {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: Colors.background },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.md,
+      paddingHorizontal: Spacing.lg,
+      paddingTop: Spacing.xxl,
+      paddingBottom: Spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: Colors.border,
+      backgroundColor: Colors.surface,
+    },
+    headerTitle: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.semibold,
+    },
+    stepRow: { flexDirection: 'row', gap: Spacing.xs },
+    stepDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: Colors.border,
+    },
+    stepDotActive: { backgroundColor: Colors.primary },
+    scroll: { flex: 1 },
+    scrollContent: {
+      padding: Spacing.lg,
+      gap: Spacing.lg,
+      paddingBottom: Spacing.xxxl,
+    },
+    sectionLabel: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.8,
+    },
+    sectionHint: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.sm,
+      marginTop: -Spacing.sm,
+    },
+    templateScroll: { marginHorizontal: -Spacing.lg },
+    templateScrollContent: { paddingHorizontal: Spacing.lg, gap: Spacing.sm },
+    templateCard: {
+      width: 140,
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      gap: Spacing.xs,
+    },
+    templateCardSelected: { borderColor: Colors.primary, backgroundColor: Colors.primaryMuted },
+    templateName: {
+      color: Colors.text,
+      fontSize: Typography.size.sm,
+      fontWeight: Typography.weight.bold,
+    },
+    templateNameSelected: { color: Colors.primary },
+    templateDesc: { color: Colors.textSecondary, fontSize: Typography.size.xs },
+    nameInput: {
+      backgroundColor: Colors.surface,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      borderRadius: BorderRadius.md,
+      paddingHorizontal: Spacing.md,
+      paddingVertical: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    pillRow: { flexDirection: 'row', gap: Spacing.sm },
+    pill: {
+      width: 48,
+      height: 48,
+      borderRadius: BorderRadius.full,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: Colors.surface,
+    },
+    pillSelected: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+    pillText: { color: Colors.textSecondary, fontSize: Typography.size.md, fontWeight: Typography.weight.semibold },
+    pillTextSelected: { color: Colors.background },
+    dayBlock: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      overflow: 'hidden',
+    },
+    dayRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      padding: Spacing.md,
+    },
+    dayBadge: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: Colors.surfaceElevated,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayBadgeText: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontWeight: Typography.weight.bold },
+    dayNameInput: {
+      flex: 1,
+      color: Colors.text,
+      fontSize: Typography.size.md,
+      fontWeight: Typography.weight.semibold,
+      paddingVertical: Spacing.xs,
+    },
+    editDayBtn: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: Spacing.xs,
+    },
+    editDayText: { color: Colors.primary, fontSize: Typography.size.sm, fontWeight: Typography.weight.semibold },
+    suggestionScroll: { borderTopWidth: 1, borderTopColor: Colors.border },
+    suggestionContent: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, gap: Spacing.sm },
+    suggestionChip: {
+      paddingHorizontal: Spacing.sm,
+      paddingVertical: 4,
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.sm,
+      borderWidth: 1,
+      borderColor: Colors.border,
+    },
+    suggestionText: { color: Colors.textSecondary, fontSize: Typography.size.xs },
+    footer: {
+      padding: Spacing.lg,
+      paddingBottom: Spacing.xxl,
+      borderTopWidth: 1,
+      borderTopColor: Colors.border,
+    },
+    ctaBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: Spacing.sm,
+      backgroundColor: Colors.primary,
+      borderRadius: BorderRadius.lg,
+      paddingVertical: Spacing.md,
+    },
+    ctaBtnPressed: { opacity: 0.85 },
+    ctaBtnText: { color: Colors.background, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
+  });
+}
+
 export default function BuilderScreen() {
+  const styles = useMemo(createStyles, []);
+
   const { loadRoutines } = useRoutineStore();
 
   const [step, setStep] = useState<1 | 2>(1);
@@ -291,154 +449,3 @@ export default function BuilderScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.xxl,
-    paddingBottom: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  headerTitle: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semibold,
-  },
-  stepRow: { flexDirection: 'row', gap: Spacing.xs },
-  stepDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.border,
-  },
-  stepDotActive: { backgroundColor: Colors.primary },
-  scroll: { flex: 1 },
-  scrollContent: {
-    padding: Spacing.lg,
-    gap: Spacing.lg,
-    paddingBottom: Spacing.xxxl,
-  },
-  sectionLabel: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  sectionHint: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.sm,
-    marginTop: -Spacing.sm,
-  },
-  templateScroll: { marginHorizontal: -Spacing.lg },
-  templateScrollContent: { paddingHorizontal: Spacing.lg, gap: Spacing.sm },
-  templateCard: {
-    width: 140,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    gap: Spacing.xs,
-  },
-  templateCardSelected: { borderColor: Colors.primary, backgroundColor: Colors.primaryMuted },
-  templateName: {
-    color: Colors.text,
-    fontSize: Typography.size.sm,
-    fontWeight: Typography.weight.bold,
-  },
-  templateNameSelected: { color: Colors.primary },
-  templateDesc: { color: Colors.textSecondary, fontSize: Typography.size.xs },
-  nameInput: {
-    backgroundColor: Colors.surface,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  pillRow: { flexDirection: 'row', gap: Spacing.sm },
-  pill: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surface,
-  },
-  pillSelected: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  pillText: { color: Colors.textSecondary, fontSize: Typography.size.md, fontWeight: Typography.weight.semibold },
-  pillTextSelected: { color: Colors.background },
-  dayBlock: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    overflow: 'hidden',
-  },
-  dayRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    padding: Spacing.md,
-  },
-  dayBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: Colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayBadgeText: { color: Colors.textSecondary, fontSize: Typography.size.sm, fontWeight: Typography.weight.bold },
-  dayNameInput: {
-    flex: 1,
-    color: Colors.text,
-    fontSize: Typography.size.md,
-    fontWeight: Typography.weight.semibold,
-    paddingVertical: Spacing.xs,
-  },
-  editDayBtn: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-  },
-  editDayText: { color: Colors.primary, fontSize: Typography.size.sm, fontWeight: Typography.weight.semibold },
-  suggestionScroll: { borderTopWidth: 1, borderTopColor: Colors.border },
-  suggestionContent: { paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, gap: Spacing.sm },
-  suggestionChip: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  suggestionText: { color: Colors.textSecondary, fontSize: Typography.size.xs },
-  footer: {
-    padding: Spacing.lg,
-    paddingBottom: Spacing.xxl,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  ctaBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.lg,
-    paddingVertical: Spacing.md,
-  },
-  ctaBtnPressed: { opacity: 0.85 },
-  ctaBtnText: { color: Colors.background, fontSize: Typography.size.md, fontWeight: Typography.weight.bold },
-});

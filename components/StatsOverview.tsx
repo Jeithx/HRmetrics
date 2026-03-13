@@ -11,6 +11,40 @@ function formatVolume(vol: number): string {
 }
 
 export default function StatsOverview() {
+  const styles = StyleSheet.create({
+    row: {
+      paddingHorizontal: Spacing.lg,
+      gap: Spacing.sm,
+      paddingTop: Spacing.md,
+      paddingBottom: Spacing.xs,
+    },
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.lg,
+      padding: Spacing.md,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      minWidth: 100,
+      gap: 2,
+    },
+    cardLabel: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      fontWeight: Typography.weight.semibold,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    cardValue: {
+      color: Colors.primary,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+    },
+    cardUnit: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.xs,
+    },
+  });
+
   const stats = useHistoryStore((s) => s.stats);
   const loadStats = useHistoryStore((s) => s.loadStats);
 
@@ -44,36 +78,3 @@ export default function StatsOverview() {
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.sm,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xs,
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    minWidth: 100,
-    gap: 2,
-  },
-  cardLabel: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    fontWeight: Typography.weight.semibold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  cardValue: {
-    color: Colors.primary,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-  },
-  cardUnit: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.xs,
-  },
-});

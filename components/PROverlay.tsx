@@ -90,6 +90,63 @@ export default function PROverlay({ prs, unit, visible, onDone }: PROverlayProps
 
   const pr = prs[index] ?? prs[0];
 
+  const styles = StyleSheet.create({
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(15,15,15,0.92)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 999,
+    },
+    card: {
+      backgroundColor: Colors.surface,
+      borderRadius: BorderRadius.xl,
+      padding: Spacing.xxxl,
+      alignItems: 'center',
+      gap: Spacing.sm,
+      marginHorizontal: Spacing.xl,
+      borderWidth: 2,
+      borderColor: Colors.primary,
+      width: '85%',
+    },
+    trophy: {
+      fontSize: 56,
+      marginBottom: Spacing.sm,
+    },
+    newPR: {
+      color: Colors.primary,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+      letterSpacing: 2,
+    },
+    exerciseName: {
+      color: Colors.text,
+      fontSize: Typography.size.lg,
+      fontWeight: Typography.weight.semibold,
+      textAlign: 'center',
+    },
+    weight: {
+      color: Colors.text,
+      fontSize: Typography.size.xxl,
+      fontWeight: Typography.weight.bold,
+      marginTop: Spacing.xs,
+    },
+    estimated: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+    },
+    counter: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      marginTop: Spacing.xs,
+    },
+    dismiss: {
+      color: Colors.textTertiary,
+      fontSize: Typography.size.xs,
+      marginTop: Spacing.sm,
+    },
+  });
+
   return (
     <Animated.View style={[styles.overlay, containerStyle]}>
       <Pressable style={StyleSheet.absoluteFill} onPress={() => {
@@ -118,59 +175,3 @@ export default function PROverlay({ prs, unit, visible, onDone }: PROverlayProps
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15,15,15,0.92)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 999,
-  },
-  card: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xxxl,
-    alignItems: 'center',
-    gap: Spacing.sm,
-    marginHorizontal: Spacing.xl,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    width: '85%',
-  },
-  trophy: {
-    fontSize: 56,
-    marginBottom: Spacing.sm,
-  },
-  newPR: {
-    color: Colors.primary,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-    letterSpacing: 2,
-  },
-  exerciseName: {
-    color: Colors.text,
-    fontSize: Typography.size.lg,
-    fontWeight: Typography.weight.semibold,
-    textAlign: 'center',
-  },
-  weight: {
-    color: Colors.text,
-    fontSize: Typography.size.xxl,
-    fontWeight: Typography.weight.bold,
-    marginTop: Spacing.xs,
-  },
-  estimated: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-  },
-  counter: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    marginTop: Spacing.xs,
-  },
-  dismiss: {
-    color: Colors.textTertiary,
-    fontSize: Typography.size.xs,
-    marginTop: Spacing.sm,
-  },
-});

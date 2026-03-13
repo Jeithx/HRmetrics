@@ -24,6 +24,37 @@ export default function SupportCTA({ visible, onDismiss }: Props) {
 
   if (!visible) return null;
 
+  const styles = StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: Colors.surfaceElevated,
+      borderRadius: BorderRadius.lg,
+      borderWidth: 1,
+      borderColor: Colors.border,
+      marginTop: Spacing.md,
+      overflow: 'hidden',
+    },
+    inner: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: Spacing.sm,
+      paddingVertical: Spacing.sm,
+      paddingLeft: Spacing.md,
+    },
+    icon: { fontSize: 16 },
+    text: {
+      color: Colors.textSecondary,
+      fontSize: Typography.size.sm,
+      flex: 1,
+    },
+    closeBtn: {
+      padding: Spacing.sm,
+      paddingRight: Spacing.md,
+    },
+  });
+
   const handleTap = () => {
     recordPromptShown();
     router.push('/settings/supporter');
@@ -47,33 +78,3 @@ export default function SupportCTA({ visible, onDismiss }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceElevated,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginTop: Spacing.md,
-    overflow: 'hidden',
-  },
-  inner: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    paddingLeft: Spacing.md,
-  },
-  icon: { fontSize: 16 },
-  text: {
-    color: Colors.textSecondary,
-    fontSize: Typography.size.sm,
-    flex: 1,
-  },
-  closeBtn: {
-    padding: Spacing.sm,
-    paddingRight: Spacing.md,
-  },
-});

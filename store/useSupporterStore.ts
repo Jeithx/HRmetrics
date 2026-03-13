@@ -22,6 +22,7 @@ function productIdToTier(productId: string): SupporterTier | null {
   if (productId === PRODUCT_IDS.PRE_WORKOUT)  return 'PRE_WORKOUT';
   if (productId === PRODUCT_IDS.CHICKEN_RICE) return 'CHICKEN_RICE';
   if (productId === PRODUCT_IDS.CHEAT_MEAL)   return 'CHEAT_MEAL';
+  if (productId === PRODUCT_IDS.MASS_GAINER)  return 'MASS_GAINER';
   return null;
 }
 
@@ -158,7 +159,7 @@ export const useSupporterStore = create<SupporterStore>((set, get) => {
         }
         const purchases = await RNIap.getAvailablePurchases();
         const tierOrder: Record<SupporterTier, number> = {
-          PRE_WORKOUT: 1, CHICKEN_RICE: 2, CHEAT_MEAL: 3,
+          PRE_WORKOUT: 1, CHICKEN_RICE: 2, CHEAT_MEAL: 3, MASS_GAINER: 4,
         };
         let highestTier: SupporterTier | null = null;
         let latestTxId = 'restored';

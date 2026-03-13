@@ -1,4 +1,18 @@
-export const Colors = {
+export interface ThemeColors {
+  background: string;
+  surface: string;
+  surfaceElevated: string;
+  primary: string;
+  primaryMuted: string;
+  text: string;
+  textSecondary: string;
+  textTertiary: string;
+  error: string;
+  success: string;
+  border: string;
+}
+
+const BASE_COLORS: ThemeColors = {
   background: '#0F0F0F',
   surface: '#1A1A1A',
   surfaceElevated: '#242424',
@@ -10,7 +24,27 @@ export const Colors = {
   error: '#FF4444',
   success: '#00C851',
   border: '#2A2A2A',
-} as const;
+};
+
+export function buildColors(themeId: string | null): ThemeColors {
+  if (!themeId) return { ...BASE_COLORS };
+  // SUPPORTER_THEMES is imported lazily to avoid circular deps
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { SUPPORTER_THEMES } = require('../constants/supporter') as { SUPPORTER_THEMES: { id: string; colors: Partial<ThemeColors> }[] };
+  const theme = SUPPORTER_THEMES.find((t) => t.id === themeId);
+  if (!theme) return { ...BASE_COLORS };
+  return {
+    ...BASE_COLORS,
+    ...theme.colors,
+    primaryMuted: (theme.colors.primary ?? BASE_COLORS.primary) + '20',
+  };
+}
+
+export const Colors: ThemeColors = { ...BASE_COLORS };
+
+export function applyTheme(themeId: string | null): void {
+  Object.assign(Colors, buildColors(themeId));
+}
 
 export const Spacing = {
   xs: 4,
